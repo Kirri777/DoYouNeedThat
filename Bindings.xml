@@ -1,0 +1,5 @@
+<Bindings>
+	<Binding name="DYNT_TOGGLE" description="Toggle the DoYouNeedThat window" header="DOYOUNEEDTHAT" category="ADDONS">
+		DoYouNeedThat:SlashCommandHandler("toggle")
+	</Binding>
+</Bindings>
