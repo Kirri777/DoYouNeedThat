@@ -57,6 +57,10 @@ function AddOn.Debug(msg)
 	if AddOn.Config.debug then AddOn.Print(msg) end
 end
 
+function AddOn:kirriCheckInGroup()
+	return (IsInGroup() or IsInGroup()) and true or false
+end
+
 function AddOn:kirriGetLink(message)
 	local LOOT_ITEM_PATTERN = _G.LOOT_ITEM:gsub("%%s", "(.+)")
 	local LOOT_ITEM_PUSHED_PATTERN = _G.LOOT_ITEM_PUSHED:gsub("%%s", "(.+)")
@@ -123,6 +127,11 @@ function AddOn:CHAT_MSG_LOOT(...)
 end
 
 function AddOn:BOSS_KILL()
+	-- dont open frame when you dont in group
+	if self:kirriCheckInGroup() == false then
+		return
+	end
+
     local _, _, difficulty = GetInstanceInfo()
 	self:ClearEntries()
     -- Don't open if its M+
