@@ -25,11 +25,7 @@ local LDB = LibStub("LibDataBroker-1.1"):NewDataObject("DoYouNeedThat", {
     icon = "Interface\\Icons\\inv_misc_bag_17",
     OnClick = function(_,buttonPressed)
         if buttonPressed == "RightButton" then
-            if AddOn.db.minimap.lock then
-                icon:Unlock("DoYouNeedThat")
-            else
-                icon:Lock("DoYouNeedThat")
-            end
+			InterfaceOptionsFrame_OpenToCategory("DoYouNeedThat")
         else
             AddOn:ToggleWindow()
         end
@@ -37,8 +33,8 @@ local LDB = LibStub("LibDataBroker-1.1"):NewDataObject("DoYouNeedThat", {
     OnTooltipShow = function(tooltip)
         if not tooltip or not tooltip.AddLine then return end
         tooltip:AddLine("DoYouNeedThat")
-        tooltip:AddLine(L["Click to toggle window"])
-        tooltip:AddLine(L["Right-click to lock Minimap Button"])
+        tooltip:AddLine(L["MINIMAP_ICON_TOOLTIP1"])
+        tooltip:AddLine(L["MINIMAP_ICON_TOOLTIP2"])
     end,
 })
 

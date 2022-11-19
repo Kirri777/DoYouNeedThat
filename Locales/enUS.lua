@@ -14,7 +14,10 @@ L["Whisper Message"] = "Whisper message (Use [item] shortcut if you want to link
 L["Hide minimap button"] = "Hide minimap button"
 L["Minimum itemlevel allowed"] = "Minimum itemlevel allowed (Your equipped itemlevel - offset)"
 L["Minimum itemlevels lower"] = "Minimum Itemlevels lower (Equipped itemlevel - offset)"
-L["Click to toggle window"] = "Click to toggle Window"
-L["Right-click to lock Minimap Button"] = "Right-click to lock Minimap Button"
+-- L["Click to toggle window"] = "Click to toggle Window"
+-- L["Right-click to lock Minimap Button"] = "Right-click to lock Minimap Button"
 L["Default Whisper Message"] = "Do you need [item]?"
 L["Toggle Window"] = "Toggle Window"
+
+L["MINIMAP_ICON_TOOLTIP1"] = "Click to toggle Window"
+L["MINIMAP_ICON_TOOLTIP2"] = "Right-click to open DoYouNeedThat options panel"
