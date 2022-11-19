@@ -8,6 +8,9 @@
 
 ## DefaultState: Enabled
 
+## X-Website: https://github.com/Kirri777/DoYouNeedThat
+## X-Feedback: https://github.com/Kirri777/DoYouNeedThat/issues
+
 Libs\LibStub.lua
 Libs\CallbackHandler-1.0.lua
 Libs\LibInspect.lua
