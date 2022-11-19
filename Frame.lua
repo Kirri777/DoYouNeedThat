@@ -378,53 +378,36 @@ function AddOn.createOptionsFrame()
     -- Debug toggle
     ---@type CheckButton
     options.debug = CreateFrame("CheckButton", "DYNT_Options_Debug", options, "ChatConfigCheckButtonTemplate")
-    options.debug:SetPoint("TOPLEFT", options, "TOPLEFT", 12, -20)
+    options.debug:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -20)
     DYNT_Options_DebugText:SetText(L["Debug"])
     if AddOn.Config.debug then options.debug:SetChecked(true) end
 
     -- Open after boss kill toggle
     ---@type CheckButton
     options.openAfterEncounter = CreateFrame("CheckButton", "DYNT_Options_OpenAfterEncounter", options, "ChatConfigCheckButtonTemplate")
-    options.openAfterEncounter:SetPoint("TOPLEFT", options, "TOPLEFT", 12, -40)
+    options.openAfterEncounter:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -50)
     DYNT_Options_OpenAfterEncounterText:SetText(L["Open loot window after encounter"])
     if AddOn.Config.openAfterEncounter then options.openAfterEncounter:SetChecked(true) end
-
-    -- Whisper message
-    --@type EditBox
-    options.whisperMessage = CreateFrame("EditBox", "DYNT_Options_WhisperMessage", options, "InputBoxTemplate")
-    options.whisperMessage:SetSize(200, 32)
-    options.whisperMessage:SetPoint("TOPLEFT", options, "TOPLEFT", 22, -80)
-    options.whisperMessage:SetAutoFocus(false)
-    options.whisperMessage:SetMaxLetters(128)
-    AddOn.Debug(AddOn.Config.whisperMessage)
-    if AddOn.Config.whisperMessage then options.whisperMessage:SetText(AddOn.Config.whisperMessage) end
-    options.whisperMessage:SetCursorPosition(0)
-    options.whisperMessage:SetScript("OnEditFocusGained", function() --[[ Override to not highlight the text ]] end)
-    options.whisperMessage:SetScript("OnEnterPressed", function(self)
-        self:ClearFocus()
-    end)
-
-    local whisperLabel = options.whisperMessage:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
-    whisperLabel:SetPoint("BOTTOMLEFT", options.whisperMessage, "TOPLEFT", 0, 0)
-    --whisperLabel:SetPoint("BOTTOMRIGHT", options.whisperMessage, "TOPRIGHT", -6, 0)
-    whisperLabel:SetJustifyH("LEFT")
-    options.whisperMessage.labelText = whisperLabel
-    options.whisperMessage.labelText:SetTextColor(1, 1, 1)
-    options.whisperMessage.labelText:SetShadowColor(0, 0, 0)
-    options.whisperMessage.labelText:SetShadowOffset(1, -1)
-    options.whisperMessage.labelText:SetText(L["Whisper Message"])
 
 	-- Hide minimap button
 	---@type CheckButton
 	options.hideMinimap = CreateFrame("CheckButton", "DYNT_Options_HideMinimap", options, "ChatConfigCheckButtonTemplate")
-	options.hideMinimap:SetPoint("TOPLEFT", options, "TOPLEFT", 12, -110)
+	options.hideMinimap:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -80)
 	DYNT_Options_HideMinimapText:SetText(L["Hide minimap button"])
 	if AddOn.db.minimap.hide then options.hideMinimap:SetChecked(true) end
 
+	-- check_isitemupgrade
+	---@type CheckButton
+	options.check_isitemupgrade = CreateFrame("CheckButton", "DYNT_Options_checkIsItemUpgrade", options, "ChatConfigCheckButtonTemplate")
+	options.check_isitemupgrade:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -110)
+	DYNT_Options_checkIsItemUpgradeText:SetText(L["OPTIONS_CHECK_ISITEMUPGRADE"])
+	if AddOn.Config.check_isitemupgrade then options.check_isitemupgrade:SetChecked(true) end
+
+    -- slider
     options.minDelta = CreateFrame("Slider", "DYNT_Options_MinDelta", options, "OptionsSliderTemplate")
-    options.minDelta:SetWidth(100)
+    options.minDelta:SetWidth(500)
     options.minDelta:SetHeight(20)
-    options.minDelta:SetPoint("TOPLEFT", 22, -170)
+    options.minDelta:SetPoint("TOPLEFT", 30, -180)
     options.minDelta:SetOrientation("HORIZONTAL")
     options.minDelta:SetMinMaxValues(0, 30)
     options.minDelta:SetValue(AddOn.Config.minDelta)
@@ -438,7 +421,7 @@ function AddOn.createOptionsFrame()
     options.minDelta:Show()
 
     local minDeltaLabel = options.minDelta:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
-    minDeltaLabel:SetPoint("BOTTOMLEFT", options.minDelta, "TOPLEFT", 0, 20)
+    minDeltaLabel:SetPoint("BOTTOMLEFT", options.minDelta, "TOPLEFT", -5, 20)
     minDeltaLabel:SetJustifyH("LEFT")
     options.minDelta.labelText = minDeltaLabel
     options.minDelta.labelText:SetTextColor(1, 1, 1)
@@ -446,21 +429,110 @@ function AddOn.createOptionsFrame()
     options.minDelta.labelText:SetShadowOffset(1, -1)
     options.minDelta.labelText:SetText(L["Minimum itemlevels lower"])
 
+    -- Whisper message
+    --@type EditBox
+    options.WHISPER_MESSAGE_1 = CreateFrame("EditBox", "DYNT_Options_whisper_message_1", options, "InputBoxTemplate")
+    options.WHISPER_MESSAGE_1:SetSize(500, 32)
+    options.WHISPER_MESSAGE_1:SetPoint("TOPLEFT", options, "TOPLEFT", 30, -240)
+    options.WHISPER_MESSAGE_1:SetAutoFocus(false)
+    options.WHISPER_MESSAGE_1:SetMaxLetters(128)
+    if AddOn.Config.whisperMessages and AddOn.Config.whisperMessages.WHISPER_MESSAGE_1 then options.WHISPER_MESSAGE_1:SetText(AddOn.Config.whisperMessages.WHISPER_MESSAGE_1) end
+    options.WHISPER_MESSAGE_1:SetCursorPosition(0)
+    options.WHISPER_MESSAGE_1:SetScript("OnEditFocusGained", function() --[[ Override to not highlight the text ]] end)
+    options.WHISPER_MESSAGE_1:SetScript("OnEnterPressed", function(self)
+        self:ClearFocus()
+    end)
+
+    local whisperLabel1 = options.WHISPER_MESSAGE_1:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
+    whisperLabel1:SetPoint("BOTTOMLEFT", options.WHISPER_MESSAGE_1, "TOPLEFT", -5, 0)
+    whisperLabel1:SetJustifyH("LEFT")
+    options.WHISPER_MESSAGE_1.labelText = whisperLabel1
+    options.WHISPER_MESSAGE_1.labelText:SetTextColor(1, 1, 1)
+    options.WHISPER_MESSAGE_1.labelText:SetShadowColor(0, 0, 0)
+    options.WHISPER_MESSAGE_1.labelText:SetShadowOffset(1, -1)
+    options.WHISPER_MESSAGE_1.labelText:SetText(L["WHISPER_MESSAGE_LABEL"])
+
+    --@type EditBox
+    options.WHISPER_MESSAGE_2 = CreateFrame("EditBox", "DYNT_Options_whisper_message_2", options, "InputBoxTemplate")
+    options.WHISPER_MESSAGE_2:SetSize(500, 32)
+    options.WHISPER_MESSAGE_2:SetPoint("TOPLEFT", options, "TOPLEFT", 30, -270)
+    options.WHISPER_MESSAGE_2:SetAutoFocus(false)
+    options.WHISPER_MESSAGE_2:SetMaxLetters(128)
+    if AddOn.Config.whisperMessages and AddOn.Config.whisperMessages.WHISPER_MESSAGE_2 then options.WHISPER_MESSAGE_2:SetText(AddOn.Config.whisperMessages.WHISPER_MESSAGE_2) end
+    options.WHISPER_MESSAGE_2:SetCursorPosition(0)
+    options.WHISPER_MESSAGE_2:SetScript("OnEditFocusGained", function() --[[ Override to not highlight the text ]] end)
+    options.WHISPER_MESSAGE_2:SetScript("OnEnterPressed", function(self)
+        self:ClearFocus()
+    end)
+
+    --@type EditBox
+    options.WHISPER_MESSAGE_3 = CreateFrame("EditBox", "DYNT_Options_whisper_message_3", options, "InputBoxTemplate")
+    options.WHISPER_MESSAGE_3:SetSize(500, 32)
+    options.WHISPER_MESSAGE_3:SetPoint("TOPLEFT", options, "TOPLEFT", 30, -300)
+    options.WHISPER_MESSAGE_3:SetAutoFocus(false)
+    options.WHISPER_MESSAGE_3:SetMaxLetters(128)
+    if AddOn.Config.whisperMessages and AddOn.Config.whisperMessages.WHISPER_MESSAGE_3 then options.WHISPER_MESSAGE_3:SetText(AddOn.Config.whisperMessages.WHISPER_MESSAGE_3) end
+    options.WHISPER_MESSAGE_3:SetCursorPosition(0)
+    options.WHISPER_MESSAGE_3:SetScript("OnEditFocusGained", function() --[[ Override to not highlight the text ]] end)
+    options.WHISPER_MESSAGE_3:SetScript("OnEnterPressed", function(self)
+        self:ClearFocus()
+    end)
+
+    --@type EditBox
+    options.WHISPER_MESSAGE_4 = CreateFrame("EditBox", "DYNT_Options_whisper_message_4", options, "InputBoxTemplate")
+    options.WHISPER_MESSAGE_4:SetSize(500, 32)
+    options.WHISPER_MESSAGE_4:SetPoint("TOPLEFT", options, "TOPLEFT", 30, -330)
+    options.WHISPER_MESSAGE_4:SetAutoFocus(false)
+    options.WHISPER_MESSAGE_4:SetMaxLetters(128)
+    if AddOn.Config.whisperMessages and AddOn.Config.whisperMessages.WHISPER_MESSAGE_4 then options.WHISPER_MESSAGE_4:SetText(AddOn.Config.whisperMessages.WHISPER_MESSAGE_4) end
+    options.WHISPER_MESSAGE_4:SetCursorPosition(0)
+    options.WHISPER_MESSAGE_4:SetScript("OnEditFocusGained", function() --[[ Override to not highlight the text ]] end)
+    options.WHISPER_MESSAGE_4:SetScript("OnEnterPressed", function(self)
+        self:ClearFocus()
+    end)
+
+    --@type EditBox
+    options.WHISPER_MESSAGE_5 = CreateFrame("EditBox", "DYNT_Options_whisper_message_5", options, "InputBoxTemplate")
+    options.WHISPER_MESSAGE_5:SetSize(500, 32)
+    options.WHISPER_MESSAGE_5:SetPoint("TOPLEFT", options, "TOPLEFT", 30, -360)
+    options.WHISPER_MESSAGE_5:SetAutoFocus(false)
+    options.WHISPER_MESSAGE_5:SetMaxLetters(128)
+    if AddOn.Config.whisperMessages and AddOn.Config.whisperMessages.WHISPER_MESSAGE_5 then options.WHISPER_MESSAGE_5:SetText(AddOn.Config.whisperMessages.WHISPER_MESSAGE_5) end
+    options.WHISPER_MESSAGE_5:SetCursorPosition(0)
+    options.WHISPER_MESSAGE_5:SetScript("OnEditFocusGained", function() --[[ Override to not highlight the text ]] end)
+    options.WHISPER_MESSAGE_5:SetScript("OnEnterPressed", function(self)
+        self:ClearFocus()
+    end)
+
     -- Set the field values to their value in SavedVariables.
     function options.refreshFields()
         options.debug:SetChecked(AddOn.Config.debug)
         options.openAfterEncounter:SetChecked(AddOn.Config.openAfterEncounter)
-        options.whisperMessage:SetText(AddOn.Config.whisperMessage)
-        options.whisperMessage:SetCursorPosition(0)
+        options.WHISPER_MESSAGE_1:SetText(AddOn.Config.whisperMessages.WHISPER_MESSAGE_1)
+        options.WHISPER_MESSAGE_1:SetCursorPosition(0)
+        options.WHISPER_MESSAGE_2:SetText(AddOn.Config.whisperMessages.WHISPER_MESSAGE_2)
+        options.WHISPER_MESSAGE_2:SetCursorPosition(0)
+        options.WHISPER_MESSAGE_3:SetText(AddOn.Config.whisperMessages.WHISPER_MESSAGE_3)
+        options.WHISPER_MESSAGE_3:SetCursorPosition(0)
+        options.WHISPER_MESSAGE_4:SetText(AddOn.Config.whisperMessages.WHISPER_MESSAGE_4)
+        options.WHISPER_MESSAGE_4:SetCursorPosition(0)
+        options.WHISPER_MESSAGE_5:SetText(AddOn.Config.whisperMessages.WHISPER_MESSAGE_5)
+        options.WHISPER_MESSAGE_5:SetCursorPosition(0)
 		options.hideMinimap:SetChecked(AddOn.db.minimap.hide)
         options.minDelta:SetValue(AddOn.Config.minDelta)
+        options.check_isitemupgrade:SetChecked(AddOn.Config.check_isitemupgrade)
     end
 
     function options.okay()
         xpcall(function()
             AddOn.db.config.debug = options.debug:GetChecked()
+            AddOn.db.config.check_isitemupgrade = options.check_isitemupgrade:GetChecked()
             AddOn.db.config.openAfterEncounter = options.openAfterEncounter:GetChecked()
-            AddOn.db.config.whisperMessage = options.whisperMessage:GetText()
+            AddOn.db.config.whisperMessages.WHISPER_MESSAGE_1 = options.WHISPER_MESSAGE_1:GetText()
+            AddOn.db.config.whisperMessages.WHISPER_MESSAGE_2 = options.WHISPER_MESSAGE_2:GetText()
+            AddOn.db.config.whisperMessages.WHISPER_MESSAGE_3 = options.WHISPER_MESSAGE_3:GetText()
+            AddOn.db.config.whisperMessages.WHISPER_MESSAGE_4 = options.WHISPER_MESSAGE_4:GetText()
+            AddOn.db.config.whisperMessages.WHISPER_MESSAGE_5 = options.WHISPER_MESSAGE_5:GetText()
 			if options.hideMinimap:GetChecked() then
 				icon:Hide("DoYouNeedThat")
 				AddOn.db.minimap.hide = true;

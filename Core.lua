@@ -58,6 +58,7 @@ function AddOn:kirriCheckInGroup()
 end
 
 function AddOn:kirriGetLink(message)
+	-- local LOOT_ITEM_PATTERN = _G.LOOT_ITEM_SELF:gsub("%%s", "(.+)")
 	local LOOT_ITEM_PATTERN = _G.LOOT_ITEM:gsub("%%s", "(.+)")
 	local LOOT_ITEM_PUSHED_PATTERN = _G.LOOT_ITEM_PUSHED:gsub("%%s", "(.+)")
 	local LOOT_ITEM_MULTIPLE_PATTERN = _G.LOOT_ITEM_MULTIPLE:gsub("%%s", "(.+)")
@@ -69,7 +70,7 @@ function AddOn:kirriGetLink(message)
         _, link = message:match(LOOT_ITEM_PUSHED_MULTIPLE_PATTERN)
 
         if not link then
-            _, link = message:match(LOOT_ITEM_PATTERN)
+            link = message:match(LOOT_ITEM_PATTERN)
 
             if not link then
                 _, link = message:match(LOOT_ITEM_PUSHED_PATTERN)
@@ -101,10 +102,13 @@ function AddOn:CHAT_MSG_LOOT(...)
 
 	-- If not Armor/Weapon
 	if (type ~= ARMOR and type ~= AUCTION_CATEGORY_ARMOR and type ~= WEAPON) then return end
+
 	-- If its a Legendary or under rare quality
 	if rarity == 5 or rarity < 3 then return end
+
 	-- If not equippable by your class return
 	if not self:IsEquippableForClass(itemClass, itemSubClass, equipLoc) then return end
+
 	-- Should get rid of class specific pieces that you cannnot equip.
 	if not DoesItemContainSpec(itemLink, playerClassId) then return end
 
@@ -113,11 +117,14 @@ function AddOn:CHAT_MSG_LOOT(...)
 
 	self.Debug(itemLink .. " " .. iLvl)
 
-	if not self:IsItemUpgrade(iLvl, equipLoc) then return end
+	if AddOn.Config.check_isitemupgrade then
+		if not self:IsItemUpgrade(iLvl, equipLoc) then return end
+	end
 
 	if not sfind(looter, '-') then
 		looter = self.Utils.GetUnitNameWithRealm(looter)
 	end
+	
 	local t = {itemLink, looter, iLvl}
 	self:AddItemToLootTable(t)
 end
@@ -165,8 +172,16 @@ function AddOn:ADDON_LOADED(addon)
 			config = {
 				whisperMessage = L["Default Whisper Message"],
 				openAfterEncounter = true,
+				check_isitemupgrade = false,
 				debug = false,
 				minDelta = 0,
+				whisperMessages = {
+					WHISPER_MESSAGE_1 = L["WHISPER_MESSAGE_1"],
+					WHISPER_MESSAGE_2 = L["WHISPER_MESSAGE_2"],
+					WHISPER_MESSAGE_3 = L["WHISPER_MESSAGE_3"],
+					WHISPER_MESSAGE_4 = L["WHISPER_MESSAGE_4"],
+					WHISPER_MESSAGE_5 = L["WHISPER_MESSAGE_5"],
+				}
 			},
             minimap = {
                 hide = false
@@ -188,6 +203,17 @@ function AddOn:ADDON_LOADED(addon)
 
 	-- Replace config with saved one
 	self.Config = self.db.config
+
+	-- if addon is updated without clean SavedVariables
+	if not self.Config.whisperMessages then
+		self.Config.whisperMessages = {
+			WHISPER_MESSAGE_1 = L["WHISPER_MESSAGE_1"],
+			WHISPER_MESSAGE_2 = L["WHISPER_MESSAGE_2"],
+			WHISPER_MESSAGE_3 = L["WHISPER_MESSAGE_3"],
+			WHISPER_MESSAGE_4 = L["WHISPER_MESSAGE_4"],
+			WHISPER_MESSAGE_5 = L["WHISPER_MESSAGE_5"],
+		}
+	end
 
     icon:Register("DoYouNeedThat", LDB, self.db.minimap)
     if not self.db.minimap.hide then
@@ -311,8 +337,21 @@ end
 
 function AddOn:SendWhisper(itemLink, looter)
 	-- Replace [item] with itemLink if supplied
-	local message = self.Config.whisperMessage:gsub("%[item%]", itemLink)
+	local message = self:kirriRandMessage():gsub("%[item%]", itemLink)
 	SendChatMessage(message, "WHISPER", nil, looter)
+end
+
+function AddOn:kirriRandMessage()
+	local messages = {}
+
+	for key, message in next, self.Config.whisperMessages do
+		-- print(message)
+		if message ~= nil and message ~= '' then
+			table.insert(messages, message)
+		end
+	end
+
+	return tostring(messages[ math.random( #messages ) ])
 end
 
 function AddOn.InspectPlayer(unit)
