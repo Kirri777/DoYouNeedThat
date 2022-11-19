@@ -4,7 +4,7 @@ local L = AddOn.L
 local icon = LibStub("LibDBIcon-1.0")
 local CreateFrame, unpack, GetItemInfo, select = CreateFrame, unpack, GetItemInfo, select
 local GetItemInfoInstant = GetItemInfoInstant
-local ITEM_QUALITY_COLORS, CreateFont, UIParent = ITEM_QUALITY_COLORS, CreateFont, UIParent
+local CreateFont, UIParent = CreateFont, UIParent
 local tsort, tonumber, xpcall, geterrorhandler = table.sort, tonumber, xpcall, geterrorhandler
 local IsModifiedClick, ChatEdit_InsertLink, DressUpItemLink = IsModifiedClick, ChatEdit_InsertLink, DressUpItemLink
 local ShowUIPanel, GameTooltip = ShowUIPanel, GameTooltip
@@ -88,8 +88,8 @@ local function skinButton(frame, small, color)
 end
 
 local function setItemBorderColor(frame, item)
-    local color = ITEM_QUALITY_COLORS[select(3, GetItemInfo(item))]
-    frame:SetBackdropBorderColor(color.r, color.g, color.b, 1)
+    local r, g, b = GetItemQualityColor(select(3, GetItemInfo(item)))
+    frame:SetBackdropBorderColor(r, g, b, 1)
     return true
 end
 
@@ -294,7 +294,8 @@ for i = 1, 20 do
 	entry.item.tex = entry.item:CreateTexture(nil, "OVERLAY")
 	entry.item.tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 	entry.item.tex:SetDrawLayer("ARTWORK")
-	entry.item.tex:SetTexture(nil)
+	-- entry.item.tex:SetTexture(nil)
+	entry.item.tex:SetTexture('')
 	entry.item.tex:SetPoint("TOPLEFT", entry.item, "TOPLEFT", 2, -2)
 	entry.item.tex:SetPoint("BOTTOMRIGHT", entry.item, "BOTTOMRIGHT", -2, 2)
 
@@ -334,7 +335,8 @@ for i = 1, 20 do
 	entry.looterEq2.tex = entry.looterEq2:CreateTexture(nil, "OVERLAY")
 	entry.looterEq2.tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 	entry.looterEq2.tex:SetDrawLayer("ARTWORK")
-	entry.looterEq2.tex:SetTexture(nil)
+	-- entry.looterEq2.tex:SetTexture(nil)
+	entry.looterEq2.tex:SetTexture('')
 	entry.looterEq2.tex:SetPoint("TOPLEFT", entry.looterEq2, "TOPLEFT", 2, -2)
 	entry.looterEq2.tex:SetPoint("BOTTOMRIGHT", entry.looterEq2, "BOTTOMRIGHT", -2, 2)
 

@@ -1,9 +1,9 @@
-## Interface: 90002
+## Interface: 100002
 
 ## Title: DoYouNeedThat?
 ## Author: Kraffs <Numinous-TarrenMill LootCouncil-TarrenMill>
-## Version: 1.1.7
-## Notes: Pesters people for loot because Personal Loot is fun!
+## Version: 1.1.8
+## Notes: Pesters people for loot because Personal Loot is fun! (Kirri mod)
 ## SavedVariables: DyntDB
 
 ## DefaultState: Enabled

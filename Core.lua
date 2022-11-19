@@ -9,13 +9,12 @@ local select, IsInGroup, GetItemInfoInstant = select, IsInGroup, GetItemInfoInst
 local UnitGUID, IsInRaid, GetNumGroupMembers, GetInstanceInfo = UnitGUID, IsInRaid, GetNumGroupMembers, GetInstanceInfo
 local C_Timer, InCombatLockdown, time = C_Timer, InCombatLockdown, time
 local UnitIsConnected, CanInspect, UnitName = UnitIsConnected, CanInspect, UnitName
-local WEAPON, ARMOR, RAID_CLASS_COLORS = WEAPON, ARMOR, RAID_CLASS_COLORS
+local WEAPON, ARMOR, RAID_CLASS_COLORS = _G.WEAPON, _G.ARMOR, RAID_CLASS_COLORS
 local CreateFrame, GetDetailedItemLevelInfo = CreateFrame, GetDetailedItemLevelInfo
 -- Fix for clients with other languages
-local AUCTION_CATEGORY_ARMOR = AUCTION_CATEGORY_ARMOR
+local AUCTION_CATEGORY_ARMOR = _G.AUCTION_CATEGORY_ARMOR
 
 local L = AddOn.L
-local LOOT_ITEM_PATTERN = gsub(LOOT_ITEM, '%%s', '(.+)')
 -- local LibItemLevel = LibStub("LibItemLevel")
 local LibInspect = LibStub("LibInspect")
 local _, playerClass, playerClassId = UnitClass("player")
@@ -58,17 +57,47 @@ function AddOn.Debug(msg)
 	if AddOn.Config.debug then AddOn.Print(msg) end
 end
 
+function AddOn:kirriGetLink(message)
+	local LOOT_ITEM_PATTERN = _G.LOOT_ITEM:gsub("%%s", "(.+)")
+	local LOOT_ITEM_PUSHED_PATTERN = _G.LOOT_ITEM_PUSHED:gsub("%%s", "(.+)")
+	local LOOT_ITEM_MULTIPLE_PATTERN = _G.LOOT_ITEM_MULTIPLE:gsub("%%s", "(.+)")
+	local LOOT_ITEM_PUSHED_MULTIPLE_PATTERN = _G.LOOT_ITEM_PUSHED_MULTIPLE:gsub("%%s", "(.+)")
+	
+    local _, link = message:match(LOOT_ITEM_MULTIPLE_PATTERN)
+
+    if not link then
+        _, link = message:match(LOOT_ITEM_PUSHED_MULTIPLE_PATTERN)
+
+        if not link then
+            _, link = message:match(LOOT_ITEM_PATTERN)
+
+            if not link then
+                _, link = message:match(LOOT_ITEM_PUSHED_PATTERN)
+
+                if not link then
+                    return
+                end
+            end
+        end
+    end
+	
+	return link
+end
+
+function AddOn:kirriGetItemID(itemLink)
+    return tonumber(itemLink:match("item:(%d+)"))
+end
+
 -- Events: CHAT_MSG_LOOT, BOSS_KILL
 function AddOn:CHAT_MSG_LOOT(...)
 	local message, _, _, _, looter = ...
-	local _, item = message:match(LOOT_ITEM_PATTERN)
+	local item = self:kirriGetLink(message)
 
 	if not item then return end
 
-	local _, _, rarity, _, _, type, _, _, equipLoc, _, _, itemClass, itemSubClass = GetItemInfo(item)
+	local _, itemLink, rarity, _, _, type, _, _, equipLoc, _, _, itemClass, itemSubClass = GetItemInfo(item)
 
-
-	if not IsEquippableItem(item) then return end
+	if not IsEquippableItem(itemLink) then return end
 
 	-- If not Armor/Weapon
 	if (type ~= ARMOR and type ~= AUCTION_CATEGORY_ARMOR and type ~= WEAPON) then return end
@@ -77,19 +106,19 @@ function AddOn:CHAT_MSG_LOOT(...)
 	-- If not equippable by your class return
 	if not self:IsEquippableForClass(itemClass, itemSubClass, equipLoc) then return end
 	-- Should get rid of class specific pieces that you cannnot equip.
-	if not DoesItemContainSpec(item, playerClassId) then return end
+	if not DoesItemContainSpec(itemLink, playerClassId) then return end
 
 	--local _, iLvl = LibItemLevel:GetItemInfo(item)
-	local iLvl = GetDetailedItemLevelInfo(item)
+	local iLvl = GetDetailedItemLevelInfo(itemLink)
 
-	self.Debug(item .. " " .. iLvl)
+	self.Debug(itemLink .. " " .. iLvl)
 
 	if not self:IsItemUpgrade(iLvl, equipLoc) then return end
 
 	if not sfind(looter, '-') then
 		looter = self.Utils.GetUnitNameWithRealm(looter)
 	end
-	local t = {item, looter, iLvl}
+	local t = {itemLink, looter, iLvl}
 	self:AddItemToLootTable(t)
 end
 
