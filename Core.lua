@@ -345,7 +345,6 @@ function AddOn:kirriRandMessage()
 	local messages = {}
 
 	for key, message in next, self.Config.whisperMessages do
-		-- print(message)
 		if message ~= nil and message ~= '' then
 			table.insert(messages, message)
 		end
