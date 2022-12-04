@@ -1,4 +1,5 @@
 local AddonName, AddOn = ...
+local KIRRI_DEBUG = false
 
 -- Localize
 local print, gsub, sfind = print, string.gsub, string.find
@@ -57,8 +58,22 @@ function AddOn:kirriCheckInGroup()
 	return (IsInGroup() or IsInGroup()) and true or false
 end
 
+function AddOn:kirriGetLinkDebug(message)
+	local LOOT_ITEM_PATTERN = _G.LOOT_ITEM_SELF:gsub("%%s", "(.+)")
+	local link = message:match(LOOT_ITEM_PATTERN)
+
+	if not link then
+		return
+	end
+
+	return link
+end
+
 function AddOn:kirriGetLink(message)
-	-- local LOOT_ITEM_PATTERN = _G.LOOT_ITEM_SELF:gsub("%%s", "(.+)")
+	if KIRRI_DEBUG == true then
+		return self:kirriGetLinkDebug(message)
+	end
+
 	local LOOT_ITEM_PATTERN = _G.LOOT_ITEM:gsub("%%s", "(.+)")
 	local LOOT_ITEM_PUSHED_PATTERN = _G.LOOT_ITEM_PUSHED:gsub("%%s", "(.+)")
 	local LOOT_ITEM_MULTIPLE_PATTERN = _G.LOOT_ITEM_MULTIPLE:gsub("%%s", "(.+)")
@@ -70,7 +85,7 @@ function AddOn:kirriGetLink(message)
         _, link = message:match(LOOT_ITEM_PUSHED_MULTIPLE_PATTERN)
 
         if not link then
-            link = message:match(LOOT_ITEM_PATTERN)
+            _, link = message:match(LOOT_ITEM_PATTERN)
 
             if not link then
                 _, link = message:match(LOOT_ITEM_PUSHED_PATTERN)
@@ -96,29 +111,89 @@ function AddOn:CHAT_MSG_LOOT(...)
 
 	if not item then return end
 
-	local _, itemLink, rarity, _, _, type, _, _, equipLoc, _, _, itemClass, itemSubClass = GetItemInfo(item)
+	local itemName, itemLink, rarity, _, _, type, _, _, equipLoc, _, _, itemClass, itemSubClass = GetItemInfo(item)
 
-	if not IsEquippableItem(itemLink) then return end
+	if not IsEquippableItem(itemLink) then
+		if KIRRI_DEBUG == true then
+			print('IsEquippableItem: false')
+			print(itemName)
+		end
+
+		return
+	end
 
 	-- If not Armor/Weapon
-	if (type ~= ARMOR and type ~= AUCTION_CATEGORY_ARMOR and type ~= WEAPON) then return end
+	if (type ~= ARMOR and type ~= AUCTION_CATEGORY_ARMOR and type ~= WEAPON) then
+		if KIRRI_DEBUG == true then
+			print('IsArmorWeapon: false')
+			print(itemName)
+		end
+
+		return
+	end
 
 	-- If its a Legendary or under rare quality
-	if rarity == 5 or rarity < 3 then return end
+	if KIRRI_DEBUG == true then
+		if rarity == 5 or rarity < 2 then
+			print('Rarity: false')
+			print(rarity)
+			print(itemName)
+	
+			return
+		end
+	else
+		if rarity == 5 or rarity < 3 then
+			if KIRRI_DEBUG == true then
+				print('Rarity: false')
+				print(rarity)
+				print(itemName)
+			end
+	
+			return
+		end
+	end
 
 	-- If not equippable by your class return
-	if not self:IsEquippableForClass(itemClass, itemSubClass, equipLoc) then return end
+	if not self:IsEquippableForClass(itemClass, itemSubClass, equipLoc) then
+		if KIRRI_DEBUG == true then
+			print('IsEquippableForClass: false')
+			print(itemName)
+		end
+
+		return
+	end
 
 	-- Should get rid of class specific pieces that you cannnot equip.
-	if not DoesItemContainSpec(itemLink, playerClassId) then return end
+	if not DoesItemContainSpec(itemLink, playerClassId) then
+		if KIRRI_DEBUG == true then
+			print('DoesItemContainSpec: false')
+			print(itemName)
+		end
+
+		return
+	end
 
 	--local _, iLvl = LibItemLevel:GetItemInfo(item)
 	local iLvl = GetDetailedItemLevelInfo(itemLink)
 
 	self.Debug(itemLink .. " " .. iLvl)
+	if KIRRI_DEBUG == true then
+		print('itemLink')
+		print(iLvl)
+		print('equipLoc')
+		print(equipLoc)
+	end
 
 	if AddOn.Config.check_isitemupgrade then
-		if not self:IsItemUpgrade(iLvl, equipLoc) then return end
+		if not self:IsItemUpgrade(iLvl, equipLoc) then
+			if KIRRI_DEBUG == true then
+				print('IsItemUpgrade: false')
+				print(iLvl)
+				print(itemName)
+			end
+	
+			return
+		end
 	end
 
 	if not sfind(looter, '-') then
@@ -345,6 +420,7 @@ function AddOn:kirriRandMessage()
 	local messages = {}
 
 	for key, message in next, self.Config.whisperMessages do
+		-- print(message)
 		if message ~= nil and message ~= '' then
 			table.insert(messages, message)
 		end
