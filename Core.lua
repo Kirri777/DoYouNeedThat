@@ -1,5 +1,5 @@
 local AddonName, AddOn = ...
-local KIRRI_DEBUG = false
+local KIRRI_DEBUG = true
 
 -- Localize
 local print, gsub, sfind = print, string.gsub, string.find
@@ -70,9 +70,9 @@ function AddOn:kirriGetLinkDebug(message)
 end
 
 function AddOn:kirriGetLink(message)
-	if KIRRI_DEBUG == true then
-		return self:kirriGetLinkDebug(message)
-	end
+	-- if KIRRI_DEBUG == true then
+	-- 	return self:kirriGetLinkDebug(message)
+	-- end
 
 	local LOOT_ITEM_PATTERN = _G.LOOT_ITEM:gsub("%%s", "(.+)")
 	local LOOT_ITEM_PUSHED_PATTERN = _G.LOOT_ITEM_PUSHED:gsub("%%s", "(.+)")
@@ -184,7 +184,7 @@ function AddOn:CHAT_MSG_LOOT(...)
 		print(equipLoc)
 	end
 
-	if AddOn.Config.check_isitemupgrade then
+	if AddOn.Config.dont_check_isitemupgrade ~= true then
 		if not self:IsItemUpgrade(iLvl, equipLoc) then
 			if KIRRI_DEBUG == true then
 				print('IsItemUpgrade: false')
@@ -247,7 +247,7 @@ function AddOn:ADDON_LOADED(addon)
 			config = {
 				whisperMessage = L["Default Whisper Message"],
 				openAfterEncounter = true,
-				check_isitemupgrade = false,
+				dont_check_isitemupgrade = false,
 				debug = false,
 				minDelta = 0,
 				whisperMessages = {
@@ -300,9 +300,7 @@ end
 
 local function GetEquippedIlvlBySlotID(slotID)
 	local item = GetInventoryItemLink('player', slotID)
-	--local _, iLvl = LibItemLevel:GetItemInfo(item)
-	local iLvl = GetDetailedItemLevelInfo(item)
-	return iLvl
+	return item and GetDetailedItemLevelInfo(item) or 0
 end
 
 function AddOn:IsItemUpgrade(ilvl, equipLoc)
@@ -336,7 +334,7 @@ end
 
 function AddOn:IsEquippableForClass(itemClass, itemSubClass, equipLoc)
 	-- Can be equipped by all, return true without checking
-	if equipLoc == 'INVTYPE_CLOAK' or equipLoc == 'INVTYPE_FINGER' or equipLoc == 'INVTYPE_TRINKET' then return true end
+	if equipLoc == 'INVTYPE_CLOAK' or equipLoc == 'INVTYPE_FINGER' or equipLoc == 'INVTYPE_TRINKET' or equipLoc == 'INVTYPE_NECK' then return true end
 	local classGear = self.Utils.ValidGear[playerClass]
 	-- Loop through equippable item classes, if a match is found return true
 	for i=1, #classGear[itemClass] do

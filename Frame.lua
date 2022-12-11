@@ -396,12 +396,12 @@ function AddOn.createOptionsFrame()
 	DYNT_Options_HideMinimapText:SetText(L["Hide minimap button"])
 	if AddOn.db.minimap.hide then options.hideMinimap:SetChecked(true) end
 
-	-- check_isitemupgrade
+	-- dont_check_isitemupgrade
 	---@type CheckButton
-	options.check_isitemupgrade = CreateFrame("CheckButton", "DYNT_Options_checkIsItemUpgrade", options, "ChatConfigCheckButtonTemplate")
-	options.check_isitemupgrade:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -110)
-	DYNT_Options_checkIsItemUpgradeText:SetText(L["OPTIONS_CHECK_ISITEMUPGRADE"])
-	if AddOn.Config.check_isitemupgrade then options.check_isitemupgrade:SetChecked(true) end
+	options.dont_check_isitemupgrade = CreateFrame("CheckButton", "DYNT_Options_dontcheckIsItemUpgrade", options, "ChatConfigCheckButtonTemplate")
+	options.dont_check_isitemupgrade:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -110)
+	DYNT_Options_dontcheckIsItemUpgradeText:SetText(L["OPTIONS_dont_check_isitemupgrade"])
+	if AddOn.Config.dont_check_isitemupgrade then options.dont_check_isitemupgrade:SetChecked(true) end
 
     -- slider
     options.minDelta = CreateFrame("Slider", "DYNT_Options_MinDelta", options, "OptionsSliderTemplate")
@@ -520,13 +520,13 @@ function AddOn.createOptionsFrame()
         options.WHISPER_MESSAGE_5:SetCursorPosition(0)
 		options.hideMinimap:SetChecked(AddOn.db.minimap.hide)
         options.minDelta:SetValue(AddOn.Config.minDelta)
-        options.check_isitemupgrade:SetChecked(AddOn.Config.check_isitemupgrade)
+        options.dont_check_isitemupgrade:SetChecked(AddOn.Config.dont_check_isitemupgrade)
     end
 
     function options.okay()
         xpcall(function()
             AddOn.db.config.debug = options.debug:GetChecked()
-            AddOn.db.config.check_isitemupgrade = options.check_isitemupgrade:GetChecked()
+            AddOn.db.config.dont_check_isitemupgrade = options.dont_check_isitemupgrade:GetChecked()
             AddOn.db.config.openAfterEncounter = options.openAfterEncounter:GetChecked()
             AddOn.db.config.whisperMessages.WHISPER_MESSAGE_1 = options.WHISPER_MESSAGE_1:GetText()
             AddOn.db.config.whisperMessages.WHISPER_MESSAGE_2 = options.WHISPER_MESSAGE_2:GetText()
