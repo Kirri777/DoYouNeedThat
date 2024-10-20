@@ -1,6 +1,8 @@
 local _, AddOn = ...
 local L = AddOn.L
 
+local KIRRI_FRAME_HEIGHT, KIRRI_CHILD_FRAME_HEIGHT = 400, 800
+
 local icon = LibStub("LibDBIcon-1.0")
 local CreateFrame, unpack, GetItemInfo, select = CreateFrame, unpack, GetItemInfo, select
 local GetItemInfoInstant = GetItemInfoInstant
@@ -88,7 +90,19 @@ local function skinButton(frame, small, color)
 end
 
 local function setItemBorderColor(frame, item)
-    local r, g, b = GetItemQualityColor(select(3, GetItemInfo(item)))
+    print('setItemBorderColor')
+    print(item)
+    print(select(1, GetItemInfo(item)))
+    print(select(3, GetItemInfo(item)))
+    local quality = select(3, GetItemInfo(item))
+    print(quality)
+
+    if not quality then
+        return false
+    end
+
+    -- local r, g, b = GetItemQualityColor(quality)
+    local r, g, b = C_Item.GetItemQualityColor(quality)
     frame:SetBackdropBorderColor(r, g, b, 1)
     return true
 end
@@ -96,9 +110,36 @@ end
 function AddOn:repositionFrames()
 	local lastentry = nil
 
+    -- sort by ilvl
 	tsort(AddOn.Entries, function(a,b)
 		return tonumber(a.ilvl:GetText()) > tonumber(b.ilvl:GetText())
 	end)
+
+    -- sort by name and ilvl
+    -- tsort(AddOn.Entries, function(a,b)
+    --     if tonumber(a.ilvl:GetText()) == tonumber(b.ilvl:GetText()) then
+    --         return tonumber(a.name:GetText()) < tonumber(b.name:GetText())
+    --     else
+    --         return tonumber(a.ilvl:GetText()) > tonumber(b.ilvl:GetText())
+    --     end
+    -- end)
+    -- tsort(AddOn.Entries, function(a,b)
+    --     if tonumber(a.ilvl:GetText()) == tonumber(b.ilvl:GetText()) and a.name ~= nil and b.name ~= nil then
+    --         return tonumber(a.name:GetText()) < tonumber(b.name:GetText())
+    --     else
+    --         return tonumber(a.ilvl:GetText()) > tonumber(b.ilvl:GetText())
+    --     end
+    -- end)
+
+    -- sort by itemID and name
+    -- tsort(AddOn.Entries, function(a,b)
+    --     return tonumber(a.name:GetText()) < tonumber(b.name:GetText())
+    --     -- if a.itemID == b.itemID then
+    --     --     return tonumber(a.name:GetText()) < tonumber(b.name:GetText())
+    --     -- else
+    --     --     return tonumber(a.itemID) < tonumber(b.itemID)
+    --     -- end
+    -- end)
 
 	for i = 1, #AddOn.Entries do
 		local currententry = AddOn.Entries[i]
@@ -163,7 +204,8 @@ AddOn.lootFrame:SetUserPlaced(true)
 AddOn.lootFrame:SetFrameStrata("DIALOG")
 AddOn.lootFrame:SetFrameLevel(1)
 AddOn.lootFrame:SetClampedToScreen(true)
-AddOn.lootFrame:SetSize(380, 200)
+-- AddOn.lootFrame:SetSize(380, 200)
+AddOn.lootFrame:SetSize(380, KIRRI_FRAME_HEIGHT)
 AddOn.lootFrame:SetPoint("CENTER")
 AddOn.lootFrame:Hide()
 
@@ -235,7 +277,9 @@ local scrollbar = CreateFrame("Slider", nil, scrollframe, "UIPanelScrollBarTempl
 Mixin(scrollbar, BackdropTemplateMixin)
 scrollbar:SetPoint("TOPLEFT", loot_table, "TOPRIGHT", 6, -16) 
 scrollbar:SetPoint("BOTTOMLEFT", loot_table, "BOTTOMRIGHT", 0, 16)
-scrollbar:SetMinMaxValues(1, 60)
+-- scrollbar:SetMinMaxValues(1, 60)
+-- scrollbar:SetMinMaxValues(1, 100)
+scrollbar:SetMinMaxValues(1, 200)
 scrollbar:SetValueStep(1)
 scrollbar.scrollStep = 1
 scrollbar:SetValue(0)
@@ -246,7 +290,8 @@ loot_table.scrollbar = scrollbar
 
 ---@type Frame
 loot_table.content = CreateFrame("Frame", nil, scrollframe)
-loot_table.content:SetSize(340, 140)
+-- loot_table.content:SetSize(340, 140)
+loot_table.content:SetSize(340, KIRRI_CHILD_FRAME_HEIGHT)
 scrollframe:SetScrollChild(loot_table.content)
 
 
@@ -372,7 +417,7 @@ end
 
 --- Options GUI
 function AddOn.createOptionsFrame()
-    local options = CreateFrame("Frame")
+    local options = CreateFrame("Frame", "DYNT_Options")
     options.name = "DoYouNeedThat"
 
     -- Debug toggle
@@ -400,8 +445,15 @@ function AddOn.createOptionsFrame()
 	---@type CheckButton
 	options.dont_check_isitemupgrade = CreateFrame("CheckButton", "DYNT_Options_dontcheckIsItemUpgrade", options, "ChatConfigCheckButtonTemplate")
 	options.dont_check_isitemupgrade:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -110)
-	DYNT_Options_dontcheckIsItemUpgradeText:SetText(L["OPTIONS_dont_check_isitemupgrade"])
+	DYNT_Options_dontcheckIsItemUpgradeText:SetText(L["OPTIONS_DONT_CHECK_ISITEMUPGRADE"])
 	if AddOn.Config.dont_check_isitemupgrade then options.dont_check_isitemupgrade:SetChecked(true) end
+
+	-- show_everywhere
+	---@type CheckButton
+	options.show_everywhere = CreateFrame("CheckButton", "DYNT_Options_show_everywhere", options, "ChatConfigCheckButtonTemplate")
+	options.show_everywhere:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -420)
+	DYNT_Options_show_everywhereText:SetText(L["OPTIONS_SHOW_EVERYWHERE"])
+	if AddOn.Config.show_everywhere then options.show_everywhere:SetChecked(true) end
 
     -- slider
     options.minDelta = CreateFrame("Slider", "DYNT_Options_MinDelta", options, "OptionsSliderTemplate")
@@ -521,12 +573,14 @@ function AddOn.createOptionsFrame()
 		options.hideMinimap:SetChecked(AddOn.db.minimap.hide)
         options.minDelta:SetValue(AddOn.Config.minDelta)
         options.dont_check_isitemupgrade:SetChecked(AddOn.Config.dont_check_isitemupgrade)
+        options.show_everywhere:SetChecked(AddOn.Config.show_everywhere)
     end
 
     function options.okay()
         xpcall(function()
             AddOn.db.config.debug = options.debug:GetChecked()
             AddOn.db.config.dont_check_isitemupgrade = options.dont_check_isitemupgrade:GetChecked()
+            AddOn.db.config.show_everywhere = options.show_everywhere:GetChecked()
             AddOn.db.config.openAfterEncounter = options.openAfterEncounter:GetChecked()
             AddOn.db.config.whisperMessages.WHISPER_MESSAGE_1 = options.WHISPER_MESSAGE_1:GetText()
             AddOn.db.config.whisperMessages.WHISPER_MESSAGE_2 = options.WHISPER_MESSAGE_2:GetText()
@@ -549,5 +603,14 @@ function AddOn.createOptionsFrame()
         options.refreshFields()
     end
 
-    InterfaceOptions_AddCategory(options)
+    -- InterfaceOptions_AddCategory(options)
+
+    if (Settings ~= nil) then
+        -- wow10
+        local category = Settings.RegisterCanvasLayoutCategory(options, 'DoYouNeedThat')
+        Settings.RegisterAddOnCategory(category)
+        options.categoryID = category:GetID() -- for OpenToCategory use
+    else
+        InterfaceOptions_AddCategory(options)
+    end
 end

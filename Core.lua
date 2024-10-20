@@ -1,4 +1,5 @@
 local AddonName, AddOn = ...
+-- local KIRRI_DEBUG = false
 local KIRRI_DEBUG = true
 
 -- Localize
@@ -26,7 +27,14 @@ local LDB = LibStub("LibDataBroker-1.1"):NewDataObject("DoYouNeedThat", {
     icon = "Interface\\Icons\\inv_misc_bag_17",
     OnClick = function(_,buttonPressed)
         if buttonPressed == "RightButton" then
-			InterfaceOptionsFrame_OpenToCategory("DoYouNeedThat")
+			if (Settings ~= nil) then
+				-- wow10
+				local settingsCategoryID = _G['DYNT_Options'].categoryID
+				Settings.OpenToCategory(settingsCategoryID)
+			else
+				InterfaceOptionsFrame_OpenToCategory("DoYouNeedThat")
+			end
+			-- InterfaceOptionsFrame_OpenToCategory("DoYouNeedThat")
         else
             AddOn:ToggleWindow()
         end
@@ -113,13 +121,15 @@ function AddOn:CHAT_MSG_LOOT(...)
 
 	local itemName, itemLink, rarity, _, _, type, _, _, equipLoc, _, _, itemClass, itemSubClass = GetItemInfo(item)
 
-	if not IsEquippableItem(itemLink) then
-		if KIRRI_DEBUG == true then
-			print('IsEquippableItem: false')
-			print(itemName)
-		end
+	if AddOn.Config.show_everywhere ~= true then
+		if not IsEquippableItem(itemLink) then
+			if KIRRI_DEBUG == true then
+				print('IsEquippableItem: false')
+				print(itemName)
+			end
 
-		return
+			return
+		end
 	end
 
 	-- If not Armor/Weapon
@@ -154,24 +164,36 @@ function AddOn:CHAT_MSG_LOOT(...)
 	end
 
 	-- If not equippable by your class return
-	if not self:IsEquippableForClass(itemClass, itemSubClass, equipLoc) then
-		if KIRRI_DEBUG == true then
-			print('IsEquippableForClass: false')
-			print(itemName)
-		end
+	-- if not self:IsEquippableForClass(itemClass, itemSubClass, equipLoc) then
+	-- 	if KIRRI_DEBUG == true then
+	-- 		print('IsEquippableForClass: false')
+	-- 		print(itemName)
+	-- 	end
 
-		return
-	end
+	-- 	return
+	-- end
 
 	-- Should get rid of class specific pieces that you cannnot equip.
-	if not DoesItemContainSpec(itemLink, playerClassId) then
-		if KIRRI_DEBUG == true then
-			print('DoesItemContainSpec: false')
-			print(itemName)
-		end
+	-- if not DoesItemContainSpec(itemLink, playerClassId) then
+	-- if not C_Item.DoesItemContainSpec(itemLink, playerClassId) then
+	-- 	if KIRRI_DEBUG == true then
+	-- 		print('DoesItemContainSpec: false')
+	-- 		print(itemName)
+	-- 	end
 
-		return
-	end
+	-- 	return
+	-- end
+
+	-- check if class can be used for tokens
+	-- if not AddOn:IsEquippableTokenForClass(item) then
+	-- 	if KIRRI_DEBUG == true then
+	-- 		print('IsEquippableTokenForClass: false')
+	-- 		print(itemName)
+	-- 	end
+
+	-- 	return
+	-- end
+	
 
 	--local _, iLvl = LibItemLevel:GetItemInfo(item)
 	local iLvl = GetDetailedItemLevelInfo(itemLink)
@@ -217,16 +239,18 @@ function AddOn:BOSS_KILL()
 end
 
 function AddOn:PLAYER_ENTERING_WORLD()
-	local _, instanceType = GetInstanceInfo()
-	if instanceType == "none" then
-		-- self.Debug("Not in instance, unregistering events")
-		self.EventFrame:UnregisterEvent("CHAT_MSG_LOOT")
-		self.EventFrame:UnregisterEvent("BOSS_KILL")
-		if self.InspectTimer then
-			self.InspectTimer:Cancel()
-			self.InspectTimer = nil
+	if AddOn.Config.show_everywhere ~= true then
+		local _, instanceType = GetInstanceInfo()
+		if instanceType == "none" then
+			-- self.Debug("Not in instance, unregistering events")
+			self.EventFrame:UnregisterEvent("CHAT_MSG_LOOT")
+			self.EventFrame:UnregisterEvent("BOSS_KILL")
+			if self.InspectTimer then
+				self.InspectTimer:Cancel()
+				self.InspectTimer = nil
+			end
+			return
 		end
-		return
 	end
 	self.Debug("In instance, registering events")
 	self.EventFrame:RegisterEvent("CHAT_MSG_LOOT")
@@ -248,6 +272,7 @@ function AddOn:ADDON_LOADED(addon)
 				whisperMessage = L["Default Whisper Message"],
 				openAfterEncounter = true,
 				dont_check_isitemupgrade = false,
+				show_everywhere = false,
 				debug = false,
 				minDelta = 0,
 				whisperMessages = {
@@ -334,7 +359,8 @@ end
 
 function AddOn:IsEquippableForClass(itemClass, itemSubClass, equipLoc)
 	-- Can be equipped by all, return true without checking
-	if equipLoc == 'INVTYPE_CLOAK' or equipLoc == 'INVTYPE_FINGER' or equipLoc == 'INVTYPE_TRINKET' or equipLoc == 'INVTYPE_NECK' then return true end
+	-- if equipLoc == 'INVTYPE_CLOAK' or equipLoc == 'INVTYPE_FINGER' or equipLoc == 'INVTYPE_TRINKET' or equipLoc == 'INVTYPE_NECK' or itemSubClass == 0 then return true end
+	if equipLoc == 'INVTYPE_CLOAK' or equipLoc == 'INVTYPE_FINGER' or equipLoc == 'INVTYPE_TRINKET' or equipLoc == 'INVTYPE_NECK' or equipLoc == 'INVTYPE_WEAPON' or itemSubClass == 0 then return true end
 	local classGear = self.Utils.ValidGear[playerClass]
 	-- Loop through equippable item classes, if a match is found return true
 	for i=1, #classGear[itemClass] do
@@ -351,6 +377,7 @@ function AddOn:ClearEntries()
 			self.Entries[i].itemLink = nil
 			self.Entries[i].looter = nil
 			self.Entries[i].guid = nil
+			self.Entries[i].itemID = nil
 		end
 	end
 end
@@ -391,6 +418,7 @@ function AddOn:AddItemToLootTable(t)
 		else
 			entry.looterEq2:Hide()
 			local slotId = self.Utils.GetSlotID(equipLoc)
+			-- DoYouNeedThat/Core.lua:413: attempt to index field 'items' (a nil value)
 			item = raidMember.items[slotId]
 		end
 		if item ~= nil then self.setItemTooltip(entry.looterEq1, item) end
@@ -401,6 +429,8 @@ function AddOn:AddItemToLootTable(t)
 	entry.name:SetTextColor(classColor.r, classColor.g, classColor.b)
 	self.setItemTooltip(entry.item, t[1])
 	entry.ilvl:SetText(t[3])
+
+	entry.itemID = self:kirriGetItemID(t[1])
 
 	self:repositionFrames()
 
@@ -494,33 +524,94 @@ AddOn.EventFrame:SetScript("OnEvent", function(self, event, ...)
 	if AddOn[event] then AddOn[event](AddOn, ...) end
 end)
 
+-- function DYNT_OnLoad()
 AddOn.EventFrame:RegisterEvent("ADDON_LOADED")
 AddOn.EventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+-- end
+
+-- local function SlashCommandHandler(msg)
+-- 	local _, _, cmd, args = sfind(msg, "%s?(%w+)%s?(.*)")
+-- 	if cmd == "clear" then
+-- 		AddOn:ClearEntries()
+-- 	elseif cmd == "test" and args ~= "" then
+-- 		local player = UnitName("player")
+-- 		local item = {args, player}
+-- 		-- local _, iLvl = LibItemLevel:GetItemInfo(args)
+-- 		local iLvl = GetDetailedItemLevelInfo(args)
+-- 		item[3] = iLvl
+-- 		LibInspect:RequestData("items", "player", false)
+-- 		AddOn:AddItemToLootTable(item)
+-- 	elseif cmd == "debug" then
+-- 		AddOn.Config.debug = not AddOn.Config.debug
+-- 		AddOn.Print("Debug mode " .. (AddOn.Config.debug and "enabled" or "disabled"))
+-- 	else
+--         AddOn:ToggleWindow()
+-- 	end
+-- end
+
+-- SLASH_DYNT1 = "/dynt"
+-- SLASH_DYNT2 = "/doyouneedthat"
+-- SlashCmdList["DYNT"] = SlashCommandHandler
+
+-- Bindings
+BINDING_HEADER_DOYOUNEEDTHAT = "DoYouNeedThat"
+BINDING_NAME_DYNT_TOGGLE = L["Toggle Window"]
+
+-- SLASH_TESTA1 = "/asdwqe"
+-- SlashCmdList["TESTA"] = function(msg)
+--    print("Hello World!")
+-- end
+
+function AddOn:IsEquippableTokenForClass(item)
+	local itemID, _, _, _, _, classID, subclassID = GetItemInfoInstant(item)
+	-- Can be equipped by all, return true without checking
+	if (classID ~= self.Utils.LE_ITEM_CLASS_ARMOR and classID ~= self.Utils.LE_ITEM_CLASS_WEAPON) or subclassID ~= self.Utils.LE_ITEM_CLASS_MISCELLANEOUS then
+		-- print(1)
+		-- print('---')
+		-- print(classID)
+		-- print(self.Utils.LE_ITEM_CLASS_ARMOR)
+		-- print(self.Utils.LE_ITEM_CLASS_WEAPON)
+		-- print('---')
+		-- print(subclassID)
+		-- print(self.Utils.LE_ITEM_CLASS_MISCELLANEOUS)
+		-- print('---')
+		return true
+	end
+
+	local tokens = self.Utils.ValidGearTokens
+	local GearForClass = self.Utils.GearForClass[playerClass]
+	
+	for i=1, #tokens['ALL'] do
+		if itemID == tokens['ALL'][i] then
+			-- print(2)
+			return true
+		end
+	end
+
+	for i=1, #tokens[GearForClass] do
+		if itemID == tokens[GearForClass][i] then
+			-- print(3)
+			return true
+		end
+	end
+
+	return false
+end
 
 local function SlashCommandHandler(msg)
 	local _, _, cmd, args = sfind(msg, "%s?(%w+)%s?(.*)")
-	if cmd == "clear" then
-		AddOn:ClearEntries()
-	elseif cmd == "test" and args ~= "" then
-		local player = UnitName("player")
-		local item = {args, player}
-		-- local _, iLvl = LibItemLevel:GetItemInfo(args)
-		local iLvl = GetDetailedItemLevelInfo(args)
-		item[3] = iLvl
-		LibInspect:RequestData("items", "player", false)
-		AddOn:AddItemToLootTable(item)
-	elseif cmd == "debug" then
-		AddOn.Config.debug = not AddOn.Config.debug
-		AddOn.Print("Debug mode " .. (AddOn.Config.debug and "enabled" or "disabled"))
+	if cmd == "test" and args ~= "" then
+		print(AddOn:IsEquippableTokenForClass(args))
+		-- local itemID, itemType, itemSubType, itemEquipLoc, icon, classID, subclassID = GetItemInfoInstant(args)
+		-- local itemName, itemLink, rarity, _, _, type, _, _, equipLoc, _, _, itemClass, itemSubClass = GetItemInfo(args)
+		-- local t = {itemLink, looter, iLvl}
+		-- local t = {itemLink, 'looter', 2}
+		-- AddOn:AddItemToLootTable(t)
+		
 	else
         AddOn:ToggleWindow()
 	end
 end
 
-SLASH_DYNT1 = "/dynt"
-SLASH_DYNT2 = "/doyouneedthat"
-SlashCmdList["DYNT"] = SlashCommandHandler
-
--- Bindings
-BINDING_HEADER_DOYOUNEEDTHAT = "DoYouNeedThat"
-BINDING_NAME_DYNT_TOGGLE = L["Toggle Window"]
+SlashCmdList['DYNT'] = SlashCommandHandler
+SLASH_DYNT1 = '/dynt'
