@@ -1,4 +1,4 @@
-local AddonName, AddOn = ...
+local AddOn = ...
 local L = AddOn.L
 L = L or {}
 
@@ -14,7 +14,9 @@ L["Whisper Message"] = "Whisper message (Use [item] shortcut if you want to link
 L["Hide minimap button"] = "Hide minimap button"
 L["Minimum itemlevel allowed"] = "Minimum itemlevel allowed (Your equipped itemlevel - offset)"
 L["Minimum itemlevels lower"] = "Minimum Itemlevels lower (Equipped itemlevel - offset)"
-L["Click to toggle window"] = "Click to toggle Window"
-L["Right-click to lock Minimap Button"] = "Right-click to lock Minimap Button"
 L["Default Whisper Message"] = "Do you need [item]?"
 L["Toggle Window"] = "Toggle Window"
+L["MINIMAP_ICON_TOOLTIP1"] = "Click to toggle Window"
+L["MINIMAP_ICON_TOOLTIP2"] = "Right-click to open DoYouNeedThat options panel"
+L["OPTIONS_DONT_CHECK_ISITEMUPGRADE"] = "Show all items for you (if checked then you can see items below your item Level)"
+L["OPTIONS_SHOW_EVERYWHERE"] = "Show everywhere (not only in instances)"
