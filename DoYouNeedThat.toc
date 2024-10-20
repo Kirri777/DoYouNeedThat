@@ -1,24 +1,15 @@
-## Interface: 100002
+## Interface: 110005, 110000, 110002
 
 ## Title: DoYouNeedThat?
 ## Author: Kraffs <Numinous-TarrenMill LootCouncil-TarrenMill>
-## Version: 1.1.8
+## Version: 1.2.0
 ## Notes: Pesters people for loot because Personal Loot is fun! (Kirri mod)
 ## SavedVariables: DyntDB
 
 ## DefaultState: Enabled
 
+## X-Credits: Kirri777
 ## X-Website: https://github.com/Kirri777/DoYouNeedThat
 ## X-Feedback: https://github.com/Kirri777/DoYouNeedThat/issues
 
-Libs\LibStub.lua
-Libs\CallbackHandler-1.0.lua
-Libs\LibInspect.lua
-Libs\LibDataBroker-1.1.lua
-Libs\LibDBIcon-1.0.lua
-
-init.lua
-locales.xml
-Core.lua
-Util.lua
-Frame.lua
+DoYouNeedThat.xml
