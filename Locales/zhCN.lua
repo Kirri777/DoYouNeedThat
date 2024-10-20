@@ -1,5 +1,8 @@
-if not(GetLocale() == "zhCN") then return end
-local addonName, AddOn = ...
+if not (GetLocale() == "zhCN") then
+    return
+end
+
+local _, AddOn = ...
 local L = AddOn.L
 L = L or {}
 
@@ -13,8 +16,11 @@ L["Looter"] = "拾取者"
 L["Looter Eq"] = "拾取者的装备"
 L["Minimum itemlevel allowed"] = "最低允许的装等"
 L["Minimum itemlevels lower"] = "显示低于你装等多少的装备"
-L["Open loot window after encounter"] = "在战斗结束后打开窗口"
-L["Right-click to lock Minimap Button"] = "右击锁定小地图图标"
 L["Toggle Window"] = "打开窗口"
 L["Whisper"] = "私聊"
 L["Whisper Message"] = "私聊发送的信息（用[item]来表示你需要的装备）"
+L["MINIMAP_ICON_TOOLTIP1"] = "Click to toggle Window"
+L["MINIMAP_ICON_TOOLTIP2"] = "Right-click to open DoYouNeedThat options panel"
+L["OPTIONS_DONT_CHECK_ISITEMUPGRADE"] =
+"Show all items for you (if checked then you can see items below your item Level)"
+L["OPTIONS_SHOW_EVERYWHERE"] = "Show everywhere (not only in instances)"

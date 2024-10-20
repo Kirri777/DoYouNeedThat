@@ -2,15 +2,15 @@ local AddonName, AddOn = ...
 
 -- Localize
 local print, gsub, sfind = print, string.gsub, string.find
-local GetItemInfo, IsEquippableItem = GetItemInfo, IsEquippableItem
+local GetItemInfo, IsEquippableItem = C_Item.GetItemInfo, C_Item.IsEquippableItem
 local GetInventoryItemLink, UnitClass = GetInventoryItemLink, UnitClass
 local SendChatMessage, UIParent = SendChatMessage, UIParent
-local select, IsInGroup, GetItemInfoInstant = select, IsInGroup, GetItemInfoInstant
+local select, IsInGroup, GetItemInfoInstant = select, IsInGroup, C_Item.GetItemInfoInstant
 local UnitGUID, IsInRaid, GetNumGroupMembers, GetInstanceInfo = UnitGUID, IsInRaid, GetNumGroupMembers, GetInstanceInfo
 local C_Timer, InCombatLockdown, time = C_Timer, InCombatLockdown, time
 local UnitIsConnected, CanInspect, UnitName = UnitIsConnected, CanInspect, UnitName
 local WEAPON, ARMOR, RAID_CLASS_COLORS = _G.WEAPON, _G.ARMOR, RAID_CLASS_COLORS
-local CreateFrame, GetDetailedItemLevelInfo = CreateFrame, GetDetailedItemLevelInfo
+local CreateFrame, GetDetailedItemLevelInfo = CreateFrame, C_Item.GetDetailedItemLevelInfo
 -- Fix for clients with other languages
 local AUCTION_CATEGORY_ARMOR = _G.AUCTION_CATEGORY_ARMOR
 
@@ -25,11 +25,13 @@ local LDB = LibStub("LibDataBroker-1.1"):NewDataObject("DoYouNeedThat", {
     icon = "Interface\\Icons\\inv_misc_bag_17",
     OnClick = function(_,buttonPressed)
         if buttonPressed == "RightButton" then
-            if AddOn.db.minimap.lock then
-                icon:Unlock("DoYouNeedThat")
-            else
-                icon:Lock("DoYouNeedThat")
-            end
+			if (Settings ~= nil) then
+				-- wow10
+				local settingsCategoryID = _G['DYNT_Options'].categoryID
+				Settings.OpenToCategory(settingsCategoryID)
+			else
+				InterfaceOptionsFrame_OpenToCategory("DoYouNeedThat")
+			end
         else
             AddOn:ToggleWindow()
         end
@@ -37,8 +39,8 @@ local LDB = LibStub("LibDataBroker-1.1"):NewDataObject("DoYouNeedThat", {
     OnTooltipShow = function(tooltip)
         if not tooltip or not tooltip.AddLine then return end
         tooltip:AddLine("DoYouNeedThat")
-        tooltip:AddLine(L["Click to toggle window"])
-        tooltip:AddLine(L["Right-click to lock Minimap Button"])
+        tooltip:AddLine(L["MINIMAP_ICON_TOOLTIP1"])
+        tooltip:AddLine(L["MINIMAP_ICON_TOOLTIP2"])
     end,
 })
 
@@ -55,6 +57,21 @@ end
 
 function AddOn.Debug(msg)
 	if AddOn.Config.debug then AddOn.Print(msg) end
+end
+
+function AddOn:kirriCheckInGroup()
+	return (IsInGroup() or IsInGroup()) and true or false
+end
+
+function AddOn:kirriGetLinkDebug(message)
+	local LOOT_ITEM_PATTERN = _G.LOOT_ITEM_SELF:gsub("%%s", "(.+)")
+	local link = message:match(LOOT_ITEM_PATTERN)
+
+	if not link then
+		return
+	end
+
+	return link
 end
 
 function AddOn:kirriGetLink(message)
@@ -106,7 +123,7 @@ function AddOn:CHAT_MSG_LOOT(...)
 	-- If not equippable by your class return
 	if not self:IsEquippableForClass(itemClass, itemSubClass, equipLoc) then return end
 	-- Should get rid of class specific pieces that you cannnot equip.
-	if not DoesItemContainSpec(itemLink, playerClassId) then return end
+	if not C_Item.DoesItemContainSpec(itemLink, playerClassId) then return end
 
 	--local _, iLvl = LibItemLevel:GetItemInfo(item)
 	local iLvl = GetDetailedItemLevelInfo(itemLink)
@@ -123,6 +140,11 @@ function AddOn:CHAT_MSG_LOOT(...)
 end
 
 function AddOn:BOSS_KILL()
+	-- dont open frame when you dont in group
+	if self:kirriCheckInGroup() == false then
+		return
+	end
+
     local _, _, difficulty = GetInstanceInfo()
 	self:ClearEntries()
     -- Don't open if its M+
@@ -194,9 +216,7 @@ end
 
 local function GetEquippedIlvlBySlotID(slotID)
 	local item = GetInventoryItemLink('player', slotID)
-	--local _, iLvl = LibItemLevel:GetItemInfo(item)
-	local iLvl = GetDetailedItemLevelInfo(item)
-	return iLvl
+	return item and GetDetailedItemLevelInfo(item) or 0
 end
 
 function AddOn:IsItemUpgrade(ilvl, equipLoc)
@@ -230,7 +250,7 @@ end
 
 function AddOn:IsEquippableForClass(itemClass, itemSubClass, equipLoc)
 	-- Can be equipped by all, return true without checking
-	if equipLoc == 'INVTYPE_CLOAK' or equipLoc == 'INVTYPE_FINGER' or equipLoc == 'INVTYPE_TRINKET' then return true end
+	if equipLoc == 'INVTYPE_CLOAK' or equipLoc == 'INVTYPE_FINGER' or equipLoc == 'INVTYPE_TRINKET' or equipLoc == 'INVTYPE_NECK' or equipLoc == 'INVTYPE_WEAPON' or itemSubClass == 0 then return true end
 	local classGear = self.Utils.ValidGear[playerClass]
 	-- Loop through equippable item classes, if a match is found return true
 	for i=1, #classGear[itemClass] do
@@ -247,6 +267,7 @@ function AddOn:ClearEntries()
 			self.Entries[i].itemLink = nil
 			self.Entries[i].looter = nil
 			self.Entries[i].guid = nil
+			self.Entries[i].itemID = nil
 		end
 	end
 end
@@ -297,6 +318,7 @@ function AddOn:AddItemToLootTable(t)
 	entry.name:SetTextColor(classColor.r, classColor.g, classColor.b)
 	self.setItemTooltip(entry.item, t[1])
 	entry.ilvl:SetText(t[3])
+	entry.itemID = self:kirriGetItemID(t[1])
 
 	self:repositionFrames()
 
@@ -400,9 +422,8 @@ local function SlashCommandHandler(msg)
 	end
 end
 
-SLASH_DYNT1 = "/dynt"
-SLASH_DYNT2 = "/doyouneedthat"
-SlashCmdList["DYNT"] = SlashCommandHandler
+SlashCmdList['DYNT'] = SlashCommandHandler
+SLASH_DYNT1 = '/dynt'
 
 -- Bindings
 BINDING_HEADER_DOYOUNEEDTHAT = "DoYouNeedThat"
