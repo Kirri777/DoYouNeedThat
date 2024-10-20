@@ -2,7 +2,7 @@ if not (GetLocale() == "zhCN") then
     return
 end
 
-local AddOn = ...
+local _, AddOn = ...
 local L = AddOn.L
 L = L or {}
 

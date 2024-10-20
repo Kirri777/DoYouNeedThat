@@ -2,8 +2,8 @@ local _, AddOn = ...
 local L = AddOn.L
 
 local icon = LibStub("LibDBIcon-1.0")
-local CreateFrame, unpack, GetItemInfo, select = CreateFrame, unpack, GetItemInfo, select
-local GetItemInfoInstant = GetItemInfoInstant
+local CreateFrame, unpack, GetItemInfo, select, GetItemQualityColor = CreateFrame, unpack, C_Item.GetItemInfo, select, C_Item.GetItemQualityColor
+local GetItemInfoInstant = C_Item.GetItemInfoInstant
 local CreateFont, UIParent = CreateFont, UIParent
 local tsort, tonumber, xpcall, geterrorhandler = table.sort, tonumber, xpcall, geterrorhandler
 local IsModifiedClick, ChatEdit_InsertLink, DressUpItemLink = IsModifiedClick, ChatEdit_InsertLink, DressUpItemLink
@@ -88,6 +88,12 @@ local function skinButton(frame, small, color)
 end
 
 local function setItemBorderColor(frame, item)
+    local quality = select(3, GetItemInfo(item))
+
+    if not quality then
+        return false
+    end
+    
     local r, g, b = GetItemQualityColor(select(3, GetItemInfo(item)))
     frame:SetBackdropBorderColor(r, g, b, 1)
     return true
@@ -96,6 +102,7 @@ end
 function AddOn:repositionFrames()
 	local lastentry = nil
 
+    -- sort by ilvl
 	tsort(AddOn.Entries, function(a,b)
 		return tonumber(a.ilvl:GetText()) > tonumber(b.ilvl:GetText())
 	end)
@@ -372,7 +379,7 @@ end
 
 --- Options GUI
 function AddOn.createOptionsFrame()
-    local options = CreateFrame("Frame")
+    local options = CreateFrame("Frame", "DYNT_Options")
     options.name = "DoYouNeedThat"
 
     -- Debug toggle
@@ -477,5 +484,12 @@ function AddOn.createOptionsFrame()
         options.refreshFields()
     end
 
-    InterfaceOptions_AddCategory(options)
+    if (Settings ~= nil) then
+        -- wow10
+        local category = Settings.RegisterCanvasLayoutCategory(options, 'DoYouNeedThat')
+        Settings.RegisterAddOnCategory(category)
+        options.categoryID = category:GetID() -- for OpenToCategory use
+    else
+        InterfaceOptions_AddCategory(options)
+    end
 end
