@@ -13,6 +13,7 @@ local WEAPON, ARMOR, RAID_CLASS_COLORS = _G.WEAPON, _G.ARMOR, RAID_CLASS_COLORS
 local CreateFrame, GetDetailedItemLevelInfo = CreateFrame, C_Item.GetDetailedItemLevelInfo
 -- Fix for clients with other languages
 local AUCTION_CATEGORY_ARMOR = _G.AUCTION_CATEGORY_ARMOR
+local CanIMogIt = _G['CanIMogIt'] or false
 
 local L = AddOn.L
 -- local LibItemLevel = LibStub("LibItemLevel")
@@ -75,6 +76,7 @@ function AddOn:kirriGetLinkDebug(message)
 end
 
 function AddOn:kirriGetLink(message)
+	self.Debug("kirriGetLink")
 	local LOOT_ITEM_PATTERN = _G.LOOT_ITEM:gsub("%%s", "(.+)")
 	local LOOT_ITEM_PUSHED_PATTERN = _G.LOOT_ITEM_PUSHED:gsub("%%s", "(.+)")
 	local LOOT_ITEM_MULTIPLE_PATTERN = _G.LOOT_ITEM_MULTIPLE:gsub("%%s", "(.+)")
@@ -107,41 +109,140 @@ end
 
 -- Events: CHAT_MSG_LOOT, BOSS_KILL
 function AddOn:CHAT_MSG_LOOT(...)
+	self.Debug("CHAT_MSG_LOOT")
 	local message, _, _, _, looter = ...
 	local item = self:kirriGetLink(message)
 
-	if not item then return end
+	if not item then
+		self.Debug("kirriGetLink: false")
+		return
+	end
 
 	local _, itemLink, rarity, _, _, type, _, _, equipLoc, _, _, itemClass, itemSubClass = GetItemInfo(item)
-
-	if not IsEquippableItem(itemLink) then return end
-
-	-- If not Armor/Weapon
-	if (type ~= ARMOR and type ~= AUCTION_CATEGORY_ARMOR and type ~= WEAPON) then return end
-	-- If its a Legendary or under rare quality
-	if rarity == 5 or rarity < 3 then return end
-	-- If not equippable by your class return
-	if not self:IsEquippableForClass(itemClass, itemSubClass, equipLoc) then return end
-	-- Should get rid of class specific pieces that you cannnot equip.
-	if not C_Item.DoesItemContainSpec(itemLink, playerClassId) then return end
-
-	--local _, iLvl = LibItemLevel:GetItemInfo(item)
 	local iLvl = GetDetailedItemLevelInfo(itemLink)
 
-	self.Debug(itemLink .. " " .. iLvl)
+	-- If not Armor/Weapon
+	if (type ~= ARMOR and type ~= AUCTION_CATEGORY_ARMOR and type ~= WEAPON) then
+		self.Debug("Armor/Weapon: false")
+		return
+	end
 
-	if not self:IsItemUpgrade(iLvl, equipLoc) then return end
+	local check, mog = self:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass, iLvl)
+
+	if not check then
+		self.Debug("checkAddItem: false")
+		return
+	end
+
+	-- if self.db.checkTransmogable then
+	-- 	local isTransmogable, isKnown, isOtherKnown, isOutdated = self:CanIMogItCheckItem(itemLink)
+	-- end
+
+
+	-- if not IsEquippableItem(itemLink) then return end
+	-- -- If its a Legendary or under rare quality
+	-- if rarity == 5 or rarity < 3 then return end
+	-- -- If not equippable by your class return
+	-- if not self:IsEquippableForClass(itemClass, itemSubClass, equipLoc) then return end
+	-- -- Should get rid of class specific pieces that you cannnot equip.
+	-- if not C_Item.DoesItemContainSpec(itemLink, playerClassId) then return end
+
+	--local _, iLvl = LibItemLevel:GetItemInfo(item)
+
+	self.Debug(itemLink .. " " .. iLvl)
 
 	if not sfind(looter, '-') then
 		looter = self.Utils.GetUnitNameWithRealm(looter)
 	end
-	local t = {itemLink, looter, iLvl}
+	local t = {itemLink, looter, iLvl, mog}
 	self:AddItemToLootTable(t)
+end
+
+function AddOn:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass, iLvl)
+	local checkmog, mog = self:checkAddItemTransmog(itemLink)
+
+	if checkmog then
+		self.Debug("checkAddItemTransmog: true")
+		return true, mog
+	end
+
+	if not IsEquippableItem(itemLink) then
+		self.Debug("IsEquippableItem: false")
+		return false, mog
+	end
+
+	-- If its a Legendary or under rare quality
+	if rarity == 5 or rarity < 3 then
+		self.Debug("rarity == 5 or rarity < 3: false")
+		return false, mog
+	end
+
+	-- If not equippable by your class return
+	if not self:IsEquippableForClass(itemClass, itemSubClass, equipLoc) then
+		self.Debug("IsEquippableForClass: false")
+		return false, mog
+	end
+
+	-- Should get rid of class specific pieces that you cannnot equip.
+	if not C_Item.DoesItemContainSpec(itemLink, playerClassId) then
+		self.Debug("DoesItemContainSpec: false")
+		return false, mog
+	end
+
+	if not self:IsItemUpgrade(iLvl, equipLoc) then
+		self.Debug("IsItemUpgrade: false")
+		return false, mog
+	end
+
+	return true, mog
+end
+
+function AddOn:checkAddItemTransmog(itemLink)
+	local mog = '|TInterface\\AddOns\\CanIMogIt\\Icons\\not_transmogable:0|t'
+
+	if not self.db.config.checkTransmogable then
+		self.Debug("checkTransmogable: false")
+		return false, mog
+	end
+
+	local isTransmogable, isKnown, isOtherKnown, isOutdated = self:CanIMogItCheckItem(itemLink)
+
+	if isOutdated then
+		self.Debug("CanIMogIt - isOutdated: true")
+		return false, mog
+	end
+
+	if not isTransmogable then
+		self.Debug("CanIMogIt - isTransmogable: false")
+		return false, mog
+	end
+
+	if isKnown then
+		mog = '|TInterface\\AddOns\\CanIMogIt\\Icons\\known:0|t'
+		self.Debug("CanIMogIt - isKnown: true")
+		return false, mog
+	end
+
+	if isOtherKnown then
+		mog = '|TInterface\\AddOns\\CanIMogIt\\Icons\\known_circle:0|t'
+
+		if self.db.config.checkTransmogableSource then
+			self.Debug("CanIMogIt - isOtherKnown and checkTransmogableSource: true")
+			return true, mog
+		end
+		
+		self.Debug("CanIMogIt - isOtherKnown: true")
+		return false, mog
+	end
+
+	mog = '|TInterface\\AddOns\\CanIMogIt\\Icons\\unknown:0|t'
+	return true, mog
 end
 
 function AddOn:BOSS_KILL()
 	-- dont open frame when you dont in group
 	if self:kirriCheckInGroup() == false then
+		self.Debug("kirriCheckInGroup: false")
 		return
 	end
 
@@ -153,6 +254,7 @@ end
 
 function AddOn:PLAYER_ENTERING_WORLD()
 	local _, instanceType = GetInstanceInfo()
+	self.Debug("PLAYER_ENTERING_WORLD - instanceType: " .. instanceType)
 	if instanceType == "none" then
 		-- self.Debug("Not in instance, unregistering events")
 		self.EventFrame:UnregisterEvent("CHAT_MSG_LOOT")
@@ -183,6 +285,8 @@ function AddOn:ADDON_LOADED(addon)
 				whisperMessage = L["Default Whisper Message"],
 				openAfterEncounter = true,
 				debug = false,
+				checkTransmogable = true,
+				checkTransmogableSource = true,
 				minDelta = 0,
 			},
             minimap = {
@@ -198,6 +302,8 @@ function AddOn:ADDON_LOADED(addon)
 		self.db.config.minDelta = 0
 	end
 
+    self.createLootFrame()
+
 	-- Set window position
 	self.lootFrame:SetPoint(self.db.lootWindow[1], self.db.lootWindow[2], self.db.lootWindow[3])
 	-- Reopen window if left opened on uireload/exit
@@ -212,6 +318,21 @@ function AddOn:ADDON_LOADED(addon)
     end
 
     self.createOptionsFrame()
+end
+
+function AddOn:recreateLootFrame()
+	self.lootFrame:Hide()
+	self.lootFrame:SetParent(nil)
+	self.lootFrame:ClearAllPoints()
+	self.lootFrame:UnregisterAllEvents()
+	self.lootFrame:SetID(0)
+
+	self.createLootFrame()
+
+	-- Set window position
+	self.lootFrame:SetPoint(self.db.lootWindow[1], self.db.lootWindow[2], self.db.lootWindow[3])
+	-- Reopen window if left opened on uireload/exit
+	if self.db.lootWindowOpen then self.lootFrame:Show() end
 end
 
 local function GetEquippedIlvlBySlotID(slotID)
@@ -320,6 +441,10 @@ function AddOn:AddItemToLootTable(t)
 	entry.ilvl:SetText(t[3])
 	entry.itemID = self:kirriGetItemID(t[1])
 
+	if self.db.config.checkTransmogable and CanIMogIt then
+		entry.mog:SetText(t[4])
+	end
+
 	self:repositionFrames()
 
 	entry.whisper:Show()
@@ -384,6 +509,44 @@ function AddOn:ToggleWindow()
     end
 end
 
+function AddOn:CanIMogItCheckItem(itemLink)
+	local isTransmogable, isKnown, isOtherKnown, isOutdated = false, false, false, false;
+
+	if (not CanIMogIt) then
+		self.Debug("CanIMogIt: false")
+		return isTransmogable, isKnown, isOtherKnown, isOutdated
+	end
+
+	isOutdated = not CanIMogIt.IsTransmogable or
+		not CanIMogIt.PlayerKnowsTransmogFromItem or
+		not CanIMogIt.PlayerKnowsTransmog or
+		not CanIMogIt.CharacterCanLearnTransmog;
+
+	if isOutdated then
+		self.Debug("CanIMogIt (isOutdated): true")
+		return isTransmogable, isKnown, isOtherKnown, isOutdated
+	end
+
+	if not CanIMogIt:IsEquippable(itemLink) then
+		self.Debug("CanIMogIt (IsEquippable): false")
+		return isTransmogable, isKnown, isOtherKnown, isOutdated
+	end
+
+	if CanIMogIt:IsTransmogable(itemLink) then
+		self.Debug("CanIMogIt (IsTransmogable): true")
+		isTransmogable = true
+		if CanIMogIt:PlayerKnowsTransmogFromItem(itemLink) then
+			self.Debug("CanIMogIt (PlayerKnowsTransmogFromItem): true")
+			isKnown = true;
+		elseif (CanIMogIt:PlayerKnowsTransmog(itemLink)) then
+			self.Debug("CanIMogIt (PlayerKnowsTransmog): true")
+			isOtherKnown = true;
+		end
+	end
+
+	return isTransmogable, isKnown, isOtherKnown, isOutdated
+end
+
 LibInspect:SetMaxAge(599)
 LibInspect:AddHook(AddonName, "items", function(guid, data)
 	if data then
@@ -408,15 +571,21 @@ local function SlashCommandHandler(msg)
 		AddOn:ClearEntries()
 	elseif cmd == "test" and args ~= "" then
 		local player = UnitName("player")
-		local item = {args, player}
+		-- local item = {args, player}
 		-- local _, iLvl = LibItemLevel:GetItemInfo(args)
 		local iLvl = GetDetailedItemLevelInfo(args)
-		item[3] = iLvl
+		-- item[3] = iLvl
 		LibInspect:RequestData("items", "player", false)
-		AddOn:AddItemToLootTable(item)
+		
+		local _, mog = AddOn:checkAddItemTransmog(args)
+		local t = {args, player, iLvl, mog}
+		AddOn:AddItemToLootTable(t)
 	elseif cmd == "debug" then
 		AddOn.Config.debug = not AddOn.Config.debug
 		AddOn.Print("Debug mode " .. (AddOn.Config.debug and "enabled" or "disabled"))
+	elseif cmd == "check" then
+		local _, itemLink, rarity, _, _, _, _, _, equipLoc, _, _, itemClass, itemSubClass = GetItemInfo(args)
+		AddOn:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass)
 	else
         AddOn:ToggleWindow()
 	end

@@ -24,3 +24,6 @@ L["MINIMAP_ICON_TOOLTIP2"] = "Right-click to open DoYouNeedThat options panel"
 L["OPTIONS_DONT_CHECK_ISITEMUPGRADE"] =
 "Show all items for you (if checked then you can see items below your item Level)"
 L["OPTIONS_SHOW_EVERYWHERE"] = "Show everywhere (not only in instances)"
+L["OPTIONS_CHECK_TRANSMOG"] = "Check item is Transmogable (Need CanIMogIt addon)"
+L["OPTIONS_CHECK_TRANSMOG_OPTIONAL"] = "Show optional source too (Need CanIMogIt addon)"
+L["CanIMogIt"] = "Mog"
