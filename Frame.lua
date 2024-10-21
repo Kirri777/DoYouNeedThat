@@ -2,7 +2,8 @@ local _, AddOn = ...
 local L = AddOn.L
 
 local icon = LibStub("LibDBIcon-1.0")
-local CreateFrame, unpack, GetItemInfo, select, GetItemQualityColor = CreateFrame, unpack, C_Item.GetItemInfo, select, C_Item.GetItemQualityColor
+local CreateFrame, unpack, GetItemInfo, select, GetItemQualityColor = CreateFrame, unpack, C_Item.GetItemInfo, select,
+    C_Item.GetItemQualityColor
 local GetItemInfoInstant = C_Item.GetItemInfoInstant
 local CreateFont, UIParent = CreateFont, UIParent
 local tsort, tonumber, xpcall, geterrorhandler = table.sort, tonumber, xpcall, geterrorhandler
@@ -26,14 +27,14 @@ local function hideItemTooltip() GameTooltip:Hide() end
 local function skinBackdrop(frame, ...)
     if (frame.background) then return false end
 
-    local border = {0,0,0,1}
-    local color = {...}
-    if (not ... ) then
-        color = {.11,.15,.18, 1}
-        border = {.06, .08, .09, 1}
+    local border = { 0, 0, 0, 1 }
+    local color = { ... }
+    if (not ...) then
+        color = { .11, .15, .18, 1 }
+        border = { .06, .08, .09, 1 }
     end
 
-    frame:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1})
+    frame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     frame:SetBackdropColor(unpack(color))
     frame:SetBackdropBorderColor(unpack(border))
 
@@ -41,36 +42,38 @@ local function skinBackdrop(frame, ...)
 end
 
 local function skinButton(frame, small, color)
-    local colors = {.1,.1,.1,1}
-    local hovercolors = {0,0.55,.85,1}
+    local colors = { .1, .1, .1, 1 }
+    local hovercolors = { 0, 0.55, .85, 1 }
     if (color == "red") then
-        colors = {.6,.1,.1,0.6}
-        hovercolors = {.6,.1,.1,1}
+        colors = { .6, .1, .1, 0.6 }
+        hovercolors = { .6, .1, .1, 1 }
     elseif (color == "blue") then
-        colors = {0,0.55,.85,0.6}
-        hovercolors = {0,0.55,.85,1}
+        colors = { 0, 0.55, .85, 0.6 }
+        hovercolors = { 0, 0.55, .85, 1 }
     elseif (color == "dark") then
-        colors = {.1,.1,.1,1}
-        hovercolors = {.1,.1,.1,1}
+        colors = { .1, .1, .1, 1 }
+        hovercolors = { .1, .1, .1, 1 }
     elseif (color == "lightgrey") then
-        colors = {.219, .219, .219, 1}
-        hovercolors = {.270, .270, .270, 1}
+        colors = { .219, .219, .219, 1 }
+        hovercolors = { .270, .270, .270, 1 }
     end
+
     frame:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 1,
-        insets = {left=1,top=1,right=1,bottom=1}
+        insets = { left = 1, top = 1, right = 1, bottom = 1 }
     })
+
     frame:SetBackdropColor(unpack(colors))
-    frame:SetBackdropBorderColor(0,0,0,1)
+    frame:SetBackdropBorderColor(0, 0, 0, 1)
     frame:SetNormalFontObject("dynt_button")
     frame:SetHighlightFontObject("dynt_button")
-    frame:SetPushedTextOffset(0,-1)
+    frame:SetPushedTextOffset(0, -1)
 
-    frame:SetSize(frame:GetTextWidth()+16,24)
+    frame:SetSize(frame:GetTextWidth() + 16, 24)
 
-    if (small and frame:GetWidth() <= 24 ) then
+    if (small and frame:GetWidth() <= 24) then
         frame:SetWidth(20)
     end
 
@@ -94,38 +97,38 @@ local function setItemBorderColor(frame, item)
     if not quality then
         return false
     end
-    
+
     local r, g, b = GetItemQualityColor(select(3, GetItemInfo(item)))
     frame:SetBackdropBorderColor(r, g, b, 1)
     return true
 end
 
 function AddOn:repositionFrames()
-	local lastentry = nil
+    local lastentry = nil
 
     -- sort by ilvl
-	tsort(AddOn.Entries, function(a,b)
-		return tonumber(a.ilvl:GetText()) > tonumber(b.ilvl:GetText())
-	end)
+    tsort(AddOn.Entries, function(a, b)
+        return tonumber(a.ilvl:GetText()) > tonumber(b.ilvl:GetText())
+    end)
 
-	for i = 1, #AddOn.Entries do
-		local currententry = AddOn.Entries[i]
-		if currententry.itemLink then
-			if lastentry then
-				currententry:SetPoint("TOPLEFT", lastentry, "BOTTOMLEFT", 0, 1)
-			else
-				currententry:SetPoint("TOPLEFT", AddOn.lootFrame.table.content, "TOPLEFT", 0, 1)
-			end
-			lastentry = currententry
-		end
-	end
+    for i = 1, #AddOn.Entries do
+        local currententry = AddOn.Entries[i]
+        if currententry.itemLink then
+            if lastentry then
+                currententry:SetPoint("TOPLEFT", lastentry, "BOTTOMLEFT", 0, 1)
+            else
+                currententry:SetPoint("TOPLEFT", AddOn.lootFrame.table.content, "TOPLEFT", 0, 1)
+            end
+            lastentry = currententry
+        end
+    end
 end
 
 function AddOn.setItemTooltip(frame, item)
-	local tex = select(5, GetItemInfoInstant(item))
-	frame.tex:SetTexture(tex)
-	frame:SetScript("OnEnter", function() showItemTooltip(item) end)
-	frame:SetScript("OnLeave", function() hideItemTooltip() end)
+    local tex = select(5, GetItemInfoInstant(item))
+    frame.tex:SetTexture(tex)
+    frame:SetScript("OnEnter", function() showItemTooltip(item) end)
+    frame:SetScript("OnLeave", function() hideItemTooltip() end)
     frame:SetScript("OnClick", function(_, button)
         if IsModifiedClick("CHATLINK") then
             if ChatEdit_InsertLink(item) then return true end
@@ -138,13 +141,13 @@ function AddOn.setItemTooltip(frame, item)
             end
         end
     end)
-	setItemBorderColor(frame, item)
-	frame:Show()
+    setItemBorderColor(frame, item)
+    frame:Show()
 end
 
 local normal_button_text = CreateFont("dynt_button")
 normal_button_text:SetFont("Interface\\AddOns\\DoYouNeedThat\\Media\\Roboto-Medium.ttf", 12, "")
-normal_button_text:SetTextColor(1,1,1,1)
+normal_button_text:SetTextColor(1, 1, 1, 1)
 normal_button_text:SetShadowColor(0, 0, 0)
 normal_button_text:SetShadowOffset(1, -1)
 normal_button_text:SetJustifyH("CENTER")
@@ -156,7 +159,7 @@ large_font:SetShadowOffset(1, -1)
 
 local normal_font = CreateFont("dynt_normal_text")
 normal_font:SetFont("Interface\\AddOns\\DoYouNeedThat\\Media\\Roboto-Medium.ttf", 11, "")
-normal_font:SetTextColor(1,1,1,1)
+normal_font:SetTextColor(1, 1, 1, 1)
 normal_font:SetShadowColor(0, 0, 0)
 normal_font:SetShadowOffset(1, -1)
 normal_font:SetJustifyH("CENTER")
@@ -165,7 +168,7 @@ function AddOn.createLootFrame()
     -- Window
     ---@type Frame
     AddOn.lootFrame = CreateFrame('frame', 'DYNT', UIParent, "BackdropTemplate")
-    skinBackdrop(AddOn.lootFrame, .1,.1,.1,.8)
+    skinBackdrop(AddOn.lootFrame, .1, .1, .1, .8)
     AddOn.lootFrame:EnableMouse(true)
     AddOn.lootFrame:SetMovable(true)
     AddOn.lootFrame:SetUserPlaced(true)
@@ -180,16 +183,16 @@ function AddOn.createLootFrame()
     ---@type Frame
     AddOn.lootFrame.header = CreateFrame('frame', nil, AddOn.lootFrame, "BackdropTemplate")
     AddOn.lootFrame.header:EnableMouse(true)
-    AddOn.lootFrame.header:RegisterForDrag('LeftButton','RightButton')
+    AddOn.lootFrame.header:RegisterForDrag('LeftButton', 'RightButton')
     AddOn.lootFrame.header:SetScript("OnDragStart", function() AddOn.lootFrame:StartMoving() end)
     AddOn.lootFrame.header:SetScript("OnDragStop", function()
-        AddOn.lootFrame:StopMovingOrSizing() 
+        AddOn.lootFrame:StopMovingOrSizing()
         local point, _, _, x, y = AddOn.lootFrame:GetPoint()
         AddOn.db.lootWindow = { point, x, y }
     end)
     AddOn.lootFrame.header:SetPoint("TOPLEFT", AddOn.lootFrame, "TOPLEFT")
     AddOn.lootFrame.header:SetPoint("BOTTOMRIGHT", AddOn.lootFrame, "TOPRIGHT", 0, -24)
-    skinBackdrop(AddOn.lootFrame.header,.1,.1,.1,1)
+    skinBackdrop(AddOn.lootFrame.header, .1, .1, .1, 1)
 
     local minimized = false
     ---@type Button
@@ -216,8 +219,8 @@ function AddOn.createLootFrame()
     AddOn.lootFrame.header.close:SetPoint("RIGHT", AddOn.lootFrame.header, "RIGHT", -4, 0)
     AddOn.lootFrame.header.close:SetText("x")
     skinButton(AddOn.lootFrame.header.close, true, "red")
-    AddOn.lootFrame.header.close:SetScript("OnClick", function() 
-        AddOn.lootFrame:Hide() 
+    AddOn.lootFrame.header.close:SetScript("OnClick", function()
+        AddOn.lootFrame:Hide()
         AddOn.db.lootWindowOpen = false
     end)
 
@@ -230,7 +233,7 @@ function AddOn.createLootFrame()
     local loot_table = CreateFrame("Frame", nil, AddOn.lootFrame, "BackdropTemplate")
     loot_table:SetPoint("TOPLEFT", AddOn.lootFrame, "TOPLEFT", 10, -50)
     loot_table:SetPoint("BOTTOMRIGHT", AddOn.lootFrame, "BOTTOMRIGHT", -30, 10)
-    skinBackdrop(loot_table, .1,.1,.1,.8)
+    skinBackdrop(loot_table, .1, .1, .1, .8)
     AddOn.lootFrame.table = loot_table
 
     ---@type ScrollFrame
@@ -242,15 +245,15 @@ function AddOn.createLootFrame()
     ---@type Slider
     local scrollbar = CreateFrame("Slider", nil, scrollframe, "UIPanelScrollBarTemplate")
     Mixin(scrollbar, BackdropTemplateMixin)
-    scrollbar:SetPoint("TOPLEFT", loot_table, "TOPRIGHT", 6, -16) 
+    scrollbar:SetPoint("TOPLEFT", loot_table, "TOPRIGHT", 6, -16)
     scrollbar:SetPoint("BOTTOMLEFT", loot_table, "BOTTOMRIGHT", 0, 16)
     scrollbar:SetMinMaxValues(1, 60)
     scrollbar:SetValueStep(1)
     scrollbar.scrollStep = 1
     scrollbar:SetValue(0)
     scrollbar:SetWidth(16)
-    scrollbar:SetScript("OnValueChanged", function (self, value) self:GetParent():SetVerticalScroll(value) end) 
-    skinBackdrop(scrollbar, .1,.1,.1,.8)
+    scrollbar:SetScript("OnValueChanged", function(self, value) self:GetParent():SetVerticalScroll(value) end)
+    skinBackdrop(scrollbar, .1, .1, .1, .8)
     loot_table.scrollbar = scrollbar
 
     ---@type Frame
@@ -320,15 +323,15 @@ function AddOn.createLootFrame()
         else
             entry:SetPoint("TOPLEFT", loot_table.content, "TOPLEFT", 0, -3)
         end
-        skinBackdrop(entry, 1,1,1,.1)
+        skinBackdrop(entry, 1, 1, 1, .1)
         entry:Hide()
 
         ---@type Frame
         entry.item = CreateFrame("Button", nil, entry, "BackdropTemplate")
-        entry.item:SetSize(20,20)
+        entry.item:SetSize(20, 20)
         --entry.item:Hide()
         entry.item:SetPoint("LEFT", entry, "LEFT", 12, 0)
-        entry.item:RegisterForClicks("LeftButtonDown","RightButtonUp")
+        entry.item:RegisterForClicks("LeftButtonDown", "RightButtonUp")
         skinBackdrop(entry.item, 0, 0, 0, 1)
 
         entry.item.tex = entry.item:CreateTexture(nil, "OVERLAY")
@@ -351,10 +354,10 @@ function AddOn.createLootFrame()
 
         ---@type Frame
         entry.looterEq1 = CreateFrame("Button", nil, entry, "BackdropTemplate")
-        entry.looterEq1:SetSize(20,20)
+        entry.looterEq1:SetSize(20, 20)
         --entry.looterEq1:Hide()
         entry.looterEq1:SetPoint("LEFT", entry, "LEFT", 181, 0)
-        entry.looterEq1:RegisterForClicks("LeftButtonDown","RightButtonUp")
+        entry.looterEq1:RegisterForClicks("LeftButtonDown", "RightButtonUp")
         skinBackdrop(entry.looterEq1, 0, 0, 0, 1)
 
         entry.looterEq1.tex = entry.looterEq1:CreateTexture(nil, "OVERLAY")
@@ -366,10 +369,10 @@ function AddOn.createLootFrame()
 
         ---@type Frame
         entry.looterEq2 = CreateFrame("Button", nil, entry, "BackdropTemplate")
-        entry.looterEq2:SetSize(20,20)
+        entry.looterEq2:SetSize(20, 20)
         entry.looterEq2:Hide()
         entry.looterEq2:SetPoint("LEFT", entry, "LEFT", 203, 0)
-        entry.looterEq2:RegisterForClicks("LeftButtonDown","RightButtonUp")
+        entry.looterEq2:RegisterForClicks("LeftButtonDown", "RightButtonUp")
         skinBackdrop(entry.looterEq2, 0, 0, 0, 1)
 
         entry.looterEq2.tex = entry.looterEq2:CreateTexture(nil, "OVERLAY")
@@ -382,12 +385,12 @@ function AddOn.createLootFrame()
 
         ---@type Button
         entry.whisper = CreateFrame("Button", nil, entry, "BackdropTemplate")
-        entry.whisper:SetSize(45,20)
+        entry.whisper:SetSize(45, 20)
         entry.whisper:SetPoint("RIGHT", entry, "RIGHT", -30, 0)
         entry.whisper:SetText(L["Whisper"])
         skinButton(entry.whisper, true, "blue")
-        entry.whisper:SetScript("OnClick", function() 
-            AddOn:SendWhisper(entry.itemLink, entry.looter)
+        entry.whisper:SetScript("OnClick", function()
+            AddOn:sendWhisperToLooter(entry.itemLink, entry.looter)
             entry.whisper:Hide()
         end)
         entry.whisper:Hide()
@@ -439,7 +442,8 @@ function AddOn.createOptionsFrame()
 
     -- Open after boss kill toggle
     ---@type CheckButton
-    options.openAfterEncounter = CreateFrame("CheckButton", "DYNT_Options_OpenAfterEncounter", options, "ChatConfigCheckButtonTemplate")
+    options.openAfterEncounter = CreateFrame("CheckButton", "DYNT_Options_OpenAfterEncounter", options,
+        "ChatConfigCheckButtonTemplate")
     options.openAfterEncounter:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -50)
     DYNT_Options_OpenAfterEncounterText:SetText(L["Open loot window after encounter"])
     if AddOn.Config.openAfterEncounter then options.openAfterEncounter:SetChecked(true) end
@@ -449,7 +453,8 @@ function AddOn.createOptionsFrame()
 
     -- Check item is Transmogable
     ---@type CheckButton
-    options.checkTransmogable = CreateFrame("CheckButton", "DYNT_Options_CheckTransmogable", options, "ChatConfigCheckButtonTemplate")
+    options.checkTransmogable = CreateFrame("CheckButton", "DYNT_Options_CheckTransmogable", options,
+        "ChatConfigCheckButtonTemplate")
     options.checkTransmogable:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -80)
     DYNT_Options_CheckTransmogableText:SetText(L["OPTIONS_CHECK_TRANSMOG"])
     if AddOn.Config.checkTransmogable then options.checkTransmogable:SetChecked(true) end
@@ -460,7 +465,8 @@ function AddOn.createOptionsFrame()
 
     -- Show optional source too
     ---@type CheckButton
-    options.checkTransmogableSource = CreateFrame("CheckButton", "DYNT_Options_CheckTransmogableSource", options, "ChatConfigCheckButtonTemplate")
+    options.checkTransmogableSource = CreateFrame("CheckButton", "DYNT_Options_CheckTransmogableSource", options,
+        "ChatConfigCheckButtonTemplate")
     options.checkTransmogableSource:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -110)
     DYNT_Options_CheckTransmogableSourceText:SetText(L["OPTIONS_CHECK_TRANSMOG_OPTIONAL"])
     if AddOn.Config.checkTransmogableSource then options.checkTransmogableSource:SetChecked(true) end
@@ -468,12 +474,12 @@ function AddOn.createOptionsFrame()
         AddOn.db.config.checkTransmogableSource = self:GetChecked()
     end)
 
-	-- Hide minimap button
-	---@type CheckButton
-	options.hideMinimap = CreateFrame("CheckButton", "DYNT_Options_HideMinimap", options, "ChatConfigCheckButtonTemplate")
-	options.hideMinimap:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -140)
-	DYNT_Options_HideMinimapText:SetText(L["Hide minimap button"])
-	if AddOn.db.minimap.hide then options.hideMinimap:SetChecked(true) end
+    -- Hide minimap button
+    ---@type CheckButton
+    options.hideMinimap = CreateFrame("CheckButton", "DYNT_Options_HideMinimap", options, "ChatConfigCheckButtonTemplate")
+    options.hideMinimap:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -140)
+    DYNT_Options_HideMinimapText:SetText(L["Hide minimap button"])
+    if AddOn.db.minimap.hide then options.hideMinimap:SetChecked(true) end
     options.hideMinimap:SetScript("OnClick", function(self)
         AddOn.db.minimap.hide = self:GetChecked()
     end)
@@ -512,13 +518,13 @@ function AddOn.createOptionsFrame()
     options.minDelta:SetValue(AddOn.Config.minDelta)
     options.minDelta:SetValueStep(1)
     options.minDelta:SetObeyStepOnDrag(true)
-    options.minDelta:SetScript("OnValueChanged", function (_, val)
+    options.minDelta:SetScript("OnValueChanged", function(_, val)
         getglobal(options.minDelta:GetName() .. 'Text'):SetText(val); --Sets the "title" text (top-centre of slider).
         AddOn.db.config.minDelta = val
     end)
-    options.minDelta.tooltipText = L["Minimum itemlevel allowed"] --Creates a tooltip on mouseover.
-    getglobal(options.minDelta:GetName() .. 'Low'):SetText('1'); --Sets the left-side slider text (default is "Low").
-    getglobal(options.minDelta:GetName() .. 'High'):SetText('100'); --Sets the right-side slider text (default is "High").
+    options.minDelta.tooltipText = L["Minimum itemlevel allowed"]                      --Creates a tooltip on mouseover.
+    getglobal(options.minDelta:GetName() .. 'Low'):SetText('1');                       --Sets the left-side slider text (default is "Low").
+    getglobal(options.minDelta:GetName() .. 'High'):SetText('100');                    --Sets the right-side slider text (default is "High").
     getglobal(options.minDelta:GetName() .. 'Text'):SetText(AddOn.db.config.minDelta); --Sets the "title" text (top-centre of slider).
     options.minDelta:Show()
 
@@ -540,7 +546,7 @@ function AddOn.createOptionsFrame()
         options.checkTransmogableSource:SetChecked(AddOn.Config.checkTransmogableSource)
         options.whisperMessage:SetText(AddOn.Config.whisperMessage)
         options.whisperMessage:SetCursorPosition(0)
-		options.hideMinimap:SetChecked(AddOn.db.minimap.hide)
+        options.hideMinimap:SetChecked(AddOn.db.minimap.hide)
         options.minDelta:SetValue(AddOn.Config.minDelta)
     end
 
@@ -552,13 +558,13 @@ function AddOn.createOptionsFrame()
             AddOn.db.config.checkTransmogable = options.checkTransmogable:GetChecked()
             AddOn.db.config.checkTransmogableSource = options.checkTransmogableSource:GetChecked()
             AddOn.db.config.whisperMessage = options.whisperMessage:GetText()
-			if options.hideMinimap:GetChecked() then
-				icon:Hide("DoYouNeedThat")
-				AddOn.db.minimap.hide = true;
-			else
-				icon:Show("DoYouNeedThat")
-				AddOn.db.minimap.hide = false;
-			end
+            if options.hideMinimap:GetChecked() then
+                icon:Hide("DoYouNeedThat")
+                AddOn.db.minimap.hide = true;
+            else
+                icon:Show("DoYouNeedThat")
+                AddOn.db.minimap.hide = false;
+            end
             AddOn.db.config.minDelta = options.minDelta:GetValue()
         end, geterrorhandler())
     end
