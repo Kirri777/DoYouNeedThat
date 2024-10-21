@@ -1,8 +1,8 @@
-## Interface: 110005, 110000, 110002
+## Interface: 110005, 110002, 110000
 
 ## Title: DoYouNeedThat?
 ## Author: Kraffs <Numinous-TarrenMill LootCouncil-TarrenMill>
-## Version: 1.2.1
+## Version: 1.2.2
 ## Notes: Pesters people for loot because Personal Loot is fun! (Kirri mod)
 ## OptionalDeps: CanIMogIt
 ## SavedVariables: DyntDB
