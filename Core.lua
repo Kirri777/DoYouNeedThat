@@ -184,6 +184,7 @@ function AddOn:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass,
         return false, mog
     end
 
+    self.Debug("IsItemUpgrade: true")
     return true, mog
 end
 
