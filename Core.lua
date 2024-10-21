@@ -9,10 +9,10 @@ local select, IsInGroup, GetItemInfoInstant = select, IsInGroup, C_Item.GetItemI
 local UnitGUID, IsInRaid, GetNumGroupMembers, GetInstanceInfo = UnitGUID, IsInRaid, GetNumGroupMembers, GetInstanceInfo
 local C_Timer, InCombatLockdown, time = C_Timer, InCombatLockdown, time
 local UnitIsConnected, CanInspect, UnitName = UnitIsConnected, CanInspect, UnitName
-local WEAPON, ARMOR, RAID_CLASS_COLORS = _G.WEAPON, _G.ARMOR, RAID_CLASS_COLORS
+local WEAPON, ARMOR, RAID_CLASS_COLORS = _G['WEAPON'], _G['ARMOR'], RAID_CLASS_COLORS
 local CreateFrame, GetDetailedItemLevelInfo = CreateFrame, C_Item.GetDetailedItemLevelInfo
 -- Fix for clients with other languages
-local AUCTION_CATEGORY_ARMOR = _G.AUCTION_CATEGORY_ARMOR
+local AUCTION_CATEGORY_ARMOR = _G['AUCTION_CATEGORY_ARMOR']
 local CanIMogIt = _G['CanIMogIt'] or false
 
 local L = AddOn.L
@@ -65,7 +65,7 @@ function AddOn:kirriCheckInGroup()
 end
 
 function AddOn:kirriGetLinkDebug(message)
-	local LOOT_ITEM_PATTERN = _G.LOOT_ITEM_SELF:gsub("%%s", "(.+)")
+	local LOOT_ITEM_PATTERN = _G['LOOT_ITEM_SELF']:gsub("%%s", "(.+)")
 	local link = message:match(LOOT_ITEM_PATTERN)
 
 	if not link then
@@ -77,10 +77,10 @@ end
 
 function AddOn:kirriGetLink(message)
 	self.Debug("kirriGetLink")
-	local LOOT_ITEM_PATTERN = _G.LOOT_ITEM:gsub("%%s", "(.+)")
-	local LOOT_ITEM_PUSHED_PATTERN = _G.LOOT_ITEM_PUSHED:gsub("%%s", "(.+)")
-	local LOOT_ITEM_MULTIPLE_PATTERN = _G.LOOT_ITEM_MULTIPLE:gsub("%%s", "(.+)")
-	local LOOT_ITEM_PUSHED_MULTIPLE_PATTERN = _G.LOOT_ITEM_PUSHED_MULTIPLE:gsub("%%s", "(.+)")
+	local LOOT_ITEM_PATTERN = _G['LOOT_ITEM']:gsub("%%s", "(.+)")
+	local LOOT_ITEM_PUSHED_PATTERN = _G['LOOT_ITEM_PUSHED']:gsub("%%s", "(.+)")
+	local LOOT_ITEM_MULTIPLE_PATTERN = _G['LOOT_ITEM_MULTIPLE']:gsub("%%s", "(.+)")
+	local LOOT_ITEM_PUSHED_MULTIPLE_PATTERN = _G['LOOT_ITEM_PUSHED_MULTIPLE']:gsub("%%s", "(.+)")
 	
     local _, link = message:match(LOOT_ITEM_MULTIPLE_PATTERN)
 
@@ -111,51 +111,41 @@ end
 function AddOn:CHAT_MSG_LOOT(...)
 	self.Debug("CHAT_MSG_LOOT")
 	local message, _, _, _, looter = ...
-	local item = self:kirriGetLink(message)
+	local messageItemLink = self:kirriGetLink(message)
 
-	if not item then
+	if not messageItemLink then
 		self.Debug("kirriGetLink: false")
 		return
 	end
 
-	local _, itemLink, rarity, _, _, type, _, _, equipLoc, _, _, itemClass, itemSubClass = GetItemInfo(item)
-	local iLvl = GetDetailedItemLevelInfo(itemLink)
+	local item = Item:CreateFromItemLink(messageItemLink)
+	item:ContinueOnItemLoad(function()
+		local itemLink = item:GetItemLink()
+		local itemLevel = item:GetCurrentItemLevel()
+		local _, _, rarity, _, _, type, _, _, equipLoc, _, _, itemClass, itemSubClass = GetItemInfo(itemLink)
 
-	-- If not Armor/Weapon
-	if (type ~= ARMOR and type ~= AUCTION_CATEGORY_ARMOR and type ~= WEAPON) then
-		self.Debug("Armor/Weapon: false")
-		return
-	end
+		-- If not Armor/Weapon
+		if (type ~= ARMOR and type ~= AUCTION_CATEGORY_ARMOR and type ~= WEAPON) then
+			self.Debug("Armor/Weapon: false")
+			return
+		end
 
-	local check, mog = self:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass, iLvl)
+		local check, mog = self:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass, itemLevel)
 
-	if not check then
-		self.Debug("checkAddItem: false")
-		return
-	end
+		if not check then
+			self.Debug("checkAddItem: false")
+			return
+		end
+		
+		-- self.Debug(itemLink .. " " .. itemLevel)
 
-	-- if self.db.checkTransmogable then
-	-- 	local isTransmogable, isKnown, isOtherKnown, isOutdated = self:CanIMogItCheckItem(itemLink)
-	-- end
+		if not sfind(looter, '-') then
+			looter = self.Utils.GetUnitNameWithRealm(looter)
+		end
 
-
-	-- if not IsEquippableItem(itemLink) then return end
-	-- -- If its a Legendary or under rare quality
-	-- if rarity == 5 or rarity < 3 then return end
-	-- -- If not equippable by your class return
-	-- if not self:IsEquippableForClass(itemClass, itemSubClass, equipLoc) then return end
-	-- -- Should get rid of class specific pieces that you cannnot equip.
-	-- if not C_Item.DoesItemContainSpec(itemLink, playerClassId) then return end
-
-	--local _, iLvl = LibItemLevel:GetItemInfo(item)
-
-	self.Debug(itemLink .. " " .. iLvl)
-
-	if not sfind(looter, '-') then
-		looter = self.Utils.GetUnitNameWithRealm(looter)
-	end
-	local t = {itemLink, looter, iLvl, mog}
-	self:AddItemToLootTable(t)
+		local t = {itemLink, looter, itemLevel, mog}
+		self:AddItemToLootTable(t)
+	end)
 end
 
 function AddOn:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass, iLvl)
@@ -341,8 +331,8 @@ local function GetEquippedIlvlBySlotID(slotID)
 end
 
 function AddOn:IsItemUpgrade(ilvl, equipLoc)
-	local function overOrWithinMin(ilvl, eq, delta)
-		return eq <= ilvl or ilvl >= eq - delta
+	local function overOrWithinMin(eqilvl, eq, delta)
+		return eq <= eqilvl or eqilvl >= eq - delta
 	end
 
 	if ilvl ~= nil and equipLoc ~= nil and equipLoc ~= '' then
@@ -565,27 +555,73 @@ end)
 AddOn.EventFrame:RegisterEvent("ADDON_LOADED")
 AddOn.EventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
+--[[
+    Returns the number if the value is a number, or false if not.
+    @param x The value to check
+    @return The number if the value is a number, or false if not.
+--]]
+function AddOn:getNumber(x)
+    local number = tonumber(x)
+    return number and number or false
+end
+
 local function SlashCommandHandler(msg)
 	local _, _, cmd, args = sfind(msg, "%s?(%w+)%s?(.*)")
 	if cmd == "clear" then
 		AddOn:ClearEntries()
 	elseif cmd == "test" and args ~= "" then
-		local player = UnitName("player")
-		-- local item = {args, player}
-		-- local _, iLvl = LibItemLevel:GetItemInfo(args)
-		local iLvl = GetDetailedItemLevelInfo(args)
-		-- item[3] = iLvl
-		LibInspect:RequestData("items", "player", false)
-		
-		local _, mog = AddOn:checkAddItemTransmog(args)
-		local t = {args, player, iLvl, mog}
-		AddOn:AddItemToLootTable(t)
+		local itemID = AddOn:getNumber(args)
+		local item
+
+		if itemID then
+			item = Item:CreateFromItemID(itemID)
+		else
+			item = Item:CreateFromItemLink(args)
+		end
+
+		item:ContinueOnItemLoad(function()
+			local player = UnitName("player")
+			LibInspect:RequestData("items", "player", false)
+
+			-- local itemID = item:GetItemID()
+			local itemLink = item:GetItemLink()
+			-- local itemQuality = item:GetItemQuality()
+			local itemLevel = item:GetCurrentItemLevel()
+			-- local inventoryTypeName = item:GetInventoryTypeName()
+
+			-- print("itemID", itemID)
+			-- print("itemLink", itemLink)
+			-- print("itemQuality", itemQuality)
+			-- print("itemLevel", itemLevel)
+			-- print("inventoryTypeName", inventoryTypeName)
+
+			local _, mog = AddOn:checkAddItemTransmog(itemLink)
+			local t = {itemLink, player, itemLevel, mog}
+			AddOn:AddItemToLootTable(t)
+		end)
+
+		-- item:ContinueWithCancelOnItemLoad (function()
+		-- 	print('error')
+		-- end)
 	elseif cmd == "debug" then
 		AddOn.Config.debug = not AddOn.Config.debug
 		AddOn.Print("Debug mode " .. (AddOn.Config.debug and "enabled" or "disabled"))
-	elseif cmd == "check" then
-		local _, itemLink, rarity, _, _, _, _, _, equipLoc, _, _, itemClass, itemSubClass = GetItemInfo(args)
-		AddOn:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass)
+	elseif cmd == "check" and args ~= "" then
+		local itemID = AddOn:getNumber(args)
+		local item
+
+		if itemID then
+			item = Item:CreateFromItemID(itemID)
+		else
+			item = Item:CreateFromItemLink(args)
+		end
+
+		item:ContinueOnItemLoad(function()
+			local itemLink = item:GetItemLink()
+			local itemLevel = item:GetCurrentItemLevel()
+			local _, _, rarity, _, _, _, _, _, equipLoc, _, _, itemClass, itemSubClass = GetItemInfo(itemLink)
+			AddOn:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass, itemLevel)
+		end)
 	else
         AddOn:ToggleWindow()
 	end
