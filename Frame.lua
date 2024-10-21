@@ -513,14 +513,15 @@ function AddOn.createOptionsFrame()
     options.minDelta:SetValueStep(1)
     options.minDelta:SetObeyStepOnDrag(true)
     options.minDelta:SetScript("OnValueChanged", function (_, val)
-        DYNT_Options_MinDeltaText:SetText(val)
+        getglobal(options.minDelta:GetName() .. 'Text'):SetText(val); --Sets the "title" text (top-centre of slider).
         AddOn.db.config.minDelta = val
     end)
-    options.tooltipText = L["Minimum itemlevel allowed"]
-    DYNT_Options_MinDeltaLow:SetText("0")
-    DYNT_Options_MinDeltaHigh:SetText("100")
-    DYNT_Options_MinDeltaText:SetText(AddOn.Config.minDelta)
+    options.minDelta.tooltipText = L["Minimum itemlevel allowed"] --Creates a tooltip on mouseover.
+    getglobal(options.minDelta:GetName() .. 'Low'):SetText('1'); --Sets the left-side slider text (default is "Low").
+    getglobal(options.minDelta:GetName() .. 'High'):SetText('100'); --Sets the right-side slider text (default is "High").
+    getglobal(options.minDelta:GetName() .. 'Text'):SetText(AddOn.db.config.minDelta); --Sets the "title" text (top-centre of slider).
     options.minDelta:Show()
+
 
     local minDeltaLabel = options.minDelta:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
     minDeltaLabel:SetPoint("TOPLEFT", options.minDelta, "TOPLEFT", -3, 30)
