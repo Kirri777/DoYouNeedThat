@@ -270,10 +270,13 @@ end
     @return True if the encounter ID is a last boss in a Mythic+ dungeon, false otherwise.
 --]]
 function AddOn:isLastBossMythicPlus(encounterId)
+    -- Convert the encounter ID to a number
+    encounterId = AddOn:getNumberOrZero(encounterId)
+
     -- Iterate through the list of Mythic+ last boss IDs
     for _, id in ipairs(self.Utils.MythicPlusLastBosses) do
         -- Check if the current ID matches the provided encounter ID
-        if id == encounterId then
+        if AddOn:getNumberOrZero(id) == encounterId then
             return true -- Return true if a match is found
         end
     end
@@ -637,12 +640,22 @@ AddOn.EventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     Returns the number if the value is a number, or false if not.
 
     @param x The value to check
-
     @return The number if the value is a number, or false if not.
 --]]
 function AddOn:getNumber(x)
     local number = tonumber(x)
     return number and number or false
+end
+
+--[[
+    Converts the input value to a number if possible, otherwise returns zero.
+
+    @param x The value to convert to a number.
+    @return The number if conversion is successful, or zero if not.
+--]]
+function AddOn:getNumberOrZero(x)
+    local number = tonumber(x)
+    return number and number or 0
 end
 
 local function SlashCommandHandler(msg)
