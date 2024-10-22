@@ -368,6 +368,23 @@ Utils.ValidGearTokens = {
 	},
 }
 
+--[[
+	List of all mythic+ last boss IDs (encounterIDs)
+
+	@see https://wago.tools/db2/DungeonEncounter
+	@see https://wowpedia.fandom.com/wiki/DungeonEncounterID
+--]]
+Utils.MythicPlusLastBosses = {
+	'1049', -- Erudax (Grim Batol 4.x)
+	'2883', -- Void Speaker Eirich (The Stonevault)
+	'2839', -- Rasha'nan (The Dawnbreaker)
+	'2909', -- Izo, the Grand Splicer (City of Threads)
+	'2901', -- Ki'katal the Harvester (Ara-Kara, City of Echoes)
+	'2393', -- Tred'ova (Mists of Tirna Scithe)
+	'2390', -- Nalthor the Rimebinder (The Necrotic Wake)
+	'2100', -- Viq'Goth <Terror of the Deep> (Siege of Boralus)
+}
+
 function Utils.GetItemIDFromLink(link)
 	return tonumber(strmatch(link or "", "item:(%d+):"))
 end

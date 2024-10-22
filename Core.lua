@@ -239,7 +239,11 @@ end
     @see https://wowpedia.fandom.com/wiki/DifficultyID
     @see https://wowpedia.fandom.com/wiki/BOSS_KILL
 --]]
-function AddOn:BOSS_KILL()
+function AddOn:BOSS_KILL(encounterID, encounterName)
+    self.Debug("BOSS_KILL")
+    self.Debug("encounterID:" .. encounterID)
+    self.Debug("encounterName:" .. encounterName)
+-- function AddOn:BOSS_KILL(encounterID)
     -- Dont open frame when you dont in group
     if not self:kirriCheckInGroup() then
         self.Debug("kirriCheckInGroup: false")
@@ -251,9 +255,29 @@ function AddOn:BOSS_KILL()
     self:ClearEntries()
 
     -- Don't open if its M+ (8 is Mythic Keystone)
-    if self.Config.openAfterEncounter and difficulty ~= 8 then
+    -- if self.Config.openAfterEncounter and difficulty ~= 8 then
+    --     self.lootFrame:Show()
+    -- end
+    if self.Config.openAfterEncounter and (difficulty ~= 8 or self:isLastBossMythicPlus(encounterID)) then
         self.lootFrame:Show()
     end
+end
+
+--[[
+    Checks if the given encounter ID corresponds to a last boss in a Mythic+ dungeon.
+
+    @param encounterId The encounter ID to check.
+    @return True if the encounter ID is a last boss in a Mythic+ dungeon, false otherwise.
+--]]
+function AddOn:isLastBossMythicPlus(encounterId)
+    -- Iterate through the list of Mythic+ last boss IDs
+    for _, id in ipairs(self.Utils.MythicPlusLastBosses) do
+        -- Check if the current ID matches the provided encounter ID
+        if id == encounterId then
+            return true -- Return true if a match is found
+        end
+    end
+    return false -- Return false if no match is found
 end
 
 function AddOn:PLAYER_ENTERING_WORLD()
