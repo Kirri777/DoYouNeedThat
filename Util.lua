@@ -383,6 +383,7 @@ Utils.MythicPlusLastBosses = {
 	'2393', -- Tred'ova (Mists of Tirna Scithe)
 	'2390', -- Nalthor the Rimebinder (The Necrotic Wake)
 	'2100', -- Viq'Goth <Terror of the Deep> (Siege of Boralus)
+	'2848', -- Prioress Murrpray (Priory of the Sacred Flame)
 }
 
 function Utils.GetItemIDFromLink(link)
