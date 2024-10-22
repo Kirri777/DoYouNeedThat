@@ -61,7 +61,7 @@ function AddOn.Debug(msg)
 end
 
 function AddOn:kirriCheckInGroup()
-    return (IsInGroup() or IsInGroup()) and true or false
+    return (IsInGroup() or IsInRaid()) and true or false
 end
 
 function AddOn:kirriGetLinkDebug(message)
@@ -230,17 +230,30 @@ function AddOn:checkAddItemTransmog(itemLink)
     return true, mog
 end
 
+--[[
+    BOSS_KILL event handler. This function is called when a boss is killed and the event is fired.
+    It checks if the player is in a group and if the encounter was not a Mythic Keystone (M+)
+    If the conditions are met, it clears the entries and shows the loot frame, if the user has enabled
+    the option to open the frame after an encounter.
+
+    @see https://wowpedia.fandom.com/wiki/DifficultyID
+    @see https://wowpedia.fandom.com/wiki/BOSS_KILL
+--]]
 function AddOn:BOSS_KILL()
-    -- dont open frame when you dont in group
-    if self:kirriCheckInGroup() == false then
+    -- Dont open frame when you dont in group
+    if not self:kirriCheckInGroup() then
         self.Debug("kirriCheckInGroup: false")
         return
     end
 
     local _, _, difficulty = GetInstanceInfo()
+    -- Clear all entries in the loot table
     self:ClearEntries()
-    -- Don't open if its M+
-    if self.Config.openAfterEncounter and difficulty ~= 8 then self.lootFrame:Show() end
+
+    -- Don't open if its M+ (8 is Mythic Keystone)
+    if self.Config.openAfterEncounter and difficulty ~= 8 then
+        self.lootFrame:Show()
+    end
 end
 
 function AddOn:PLAYER_ENTERING_WORLD()
@@ -337,6 +350,8 @@ function AddOn:IsItemUpgrade(ilvl, equipLoc)
         return eq <= eqilvl or eqilvl >= eq - delta
     end
 
+    -- print('ilvl', ilvl, 'equipLoc', equipLoc)
+
     if ilvl ~= nil and equipLoc ~= nil and equipLoc ~= '' then
         local delta = self.Config.minDelta
         -- Evaluate item. If ilvl > your current ilvl
@@ -348,7 +363,7 @@ function AddOn:IsItemUpgrade(ilvl, equipLoc)
             local eqIlvl1 = GetEquippedIlvlBySlotID(13)
             local eqIlvl2 = GetEquippedIlvlBySlotID(14)
             return overOrWithinMin(ilvl, eqIlvl1, delta) or overOrWithinMin(ilvl, eqIlvl2, delta)
-        elseif equipLoc == 'INVTYPE_WEAPON' then
+        elseif equipLoc == 'INVTYPE_WEAPON' or equipLoc == 'INVTYPE_HOLDABLE' or equipLoc == 'INVTYPE_WEAPONOFFHAND' or equipLoc == 'INVTYPE_SHIELD' then
             local eqIlvl1 = GetEquippedIlvlBySlotID(16)
             local eqIlvl2 = GetEquippedIlvlBySlotID(17)
             return overOrWithinMin(ilvl, eqIlvl1, delta) or overOrWithinMin(ilvl, eqIlvl2, delta)
@@ -415,13 +430,15 @@ function AddOn:AddItemToLootTable(t)
         local raidMember = self.RaidMembers[entry.guid]
         local item, item2 = nil, nil
         if equipLoc == "INVTYPE_FINGER" then
-            item, item2 = raidMember.items[11], raidMember.items[12]
+            item, item2 = raidMember.items[11] or nil, raidMember.items[12] or nil
         elseif equipLoc == "INVTYPE_TRINKET" then
-            item, item2 = raidMember.items[13], raidMember.items[14]
+            item, item2 = raidMember.items[13] or nil, raidMember.items[14] or nil
+        elseif equipLoc == 'INVTYPE_WEAPON' or equipLoc == 'INVTYPE_HOLDABLE' or equipLoc == 'INVTYPE_WEAPONOFFHAND' or equipLoc == 'INVTYPE_SHIELD' then
+            item, item2 = raidMember.items[16] or nil, raidMember.items[17] or nil
         else
             entry.looterEq2:Hide()
             local slotId = self.Utils.GetSlotID(equipLoc)
-            item = raidMember.items[slotId]
+            item = raidMember.items[slotId] or nil
         end
         if item ~= nil then self.setItemTooltip(entry.looterEq1, item) end
         if item2 ~= nil then self.setItemTooltip(entry.looterEq2, item2) end
@@ -656,10 +673,15 @@ local function SlashCommandHandler(msg)
         end
 
         item:ContinueOnItemLoad(function()
+            local player = UnitName("player")
+            LibInspect:RequestData("items", "player", false)
+
             local itemLink = item:GetItemLink()
             local itemLevel = item:GetCurrentItemLevel()
             local _, _, rarity, _, _, _, _, _, equipLoc, _, _, itemClass, itemSubClass = GetItemInfo(itemLink)
-            AddOn:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass, itemLevel)
+            local _, mog = AddOn:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass, itemLevel)
+            local t = { itemLink, player, itemLevel, mog }
+            AddOn:AddItemToLootTable(t)
         end)
     else
         AddOn:ToggleWindow()
