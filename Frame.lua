@@ -166,7 +166,7 @@ normal_font:SetJustifyH("CENTER")
 
 function AddOn.createLootFrame()
     -- Window
-    ---@type Frame
+    ---@type table|BackdropTemplate|Frame
     AddOn.lootFrame = CreateFrame('frame', 'DYNT', UIParent, "BackdropTemplate")
     skinBackdrop(AddOn.lootFrame, .1, .1, .1, .8)
     AddOn.lootFrame:EnableMouse(true)
@@ -180,7 +180,7 @@ function AddOn.createLootFrame()
     AddOn.lootFrame:Hide()
 
     -- Header
-    ---@type Frame
+    ---@type table|BackdropTemplate|Frame
     AddOn.lootFrame.header = CreateFrame('frame', nil, AddOn.lootFrame, "BackdropTemplate")
     AddOn.lootFrame.header:EnableMouse(true)
     AddOn.lootFrame.header:RegisterForDrag('LeftButton', 'RightButton')
@@ -195,7 +195,7 @@ function AddOn.createLootFrame()
     skinBackdrop(AddOn.lootFrame.header, .1, .1, .1, 1)
 
     local minimized = false
-    ---@type Button
+    ---@type table|BackdropTemplate|Button
     AddOn.lootFrame.header.minimize = CreateFrame("Button", nil, AddOn.lootFrame.header, "BackdropTemplate")
     AddOn.lootFrame.header.minimize:SetPoint("RIGHT", AddOn.lootFrame.header, "RIGHT", -30, 0)
     AddOn.lootFrame.header.minimize:SetText("-")
@@ -214,7 +214,7 @@ function AddOn.createLootFrame()
         end
     end)
 
-    ---@type Button
+    ---@type table|BackdropTemplate|Button
     AddOn.lootFrame.header.close = CreateFrame("Button", nil, AddOn.lootFrame.header, "BackdropTemplate")
     AddOn.lootFrame.header.close:SetPoint("RIGHT", AddOn.lootFrame.header, "RIGHT", -4, 0)
     AddOn.lootFrame.header.close:SetText("x")
@@ -229,20 +229,20 @@ function AddOn.createLootFrame()
     AddOn.lootFrame.header.text:SetPoint("CENTER", AddOn.lootFrame.header, "CENTER")
 
     -- Vote table
-    ---@type Frame
+    ---@type table|BackdropTemplate|Frame
     local loot_table = CreateFrame("Frame", nil, AddOn.lootFrame, "BackdropTemplate")
     loot_table:SetPoint("TOPLEFT", AddOn.lootFrame, "TOPLEFT", 10, -50)
     loot_table:SetPoint("BOTTOMRIGHT", AddOn.lootFrame, "BOTTOMRIGHT", -30, 10)
     skinBackdrop(loot_table, .1, .1, .1, .8)
     AddOn.lootFrame.table = loot_table
 
-    ---@type ScrollFrame
+    ---@type table|BackdropTemplate|ScrollFrame
     local scrollframe = CreateFrame("ScrollFrame", nil, loot_table)
     scrollframe:SetPoint("TOPLEFT", loot_table, "TOPLEFT", 0, -2)
     scrollframe:SetPoint("BOTTOMRIGHT", loot_table, "BOTTOMRIGHT", 0, 2)
     loot_table.scrollframe = scrollframe
 
-    ---@type Slider
+    ---@type table|BackdropTemplate|Slider
     local scrollbar = CreateFrame("Slider", nil, scrollframe, "UIPanelScrollBarTemplate")
     Mixin(scrollbar, BackdropTemplateMixin)
     scrollbar:SetPoint("TOPLEFT", loot_table, "TOPRIGHT", 6, -16)
@@ -315,7 +315,7 @@ function AddOn.createLootFrame()
 
     local lastframe = nil
     for i = 1, 20 do
-        ---@type Button
+        ---@type table|BackdropTemplate|Button
         local entry = CreateFrame("Button", nil, loot_table.content, "BackdropTemplate")
         entry:SetSize(loot_table.content:GetWidth(), 24)
         if (lastframe) then
@@ -326,7 +326,7 @@ function AddOn.createLootFrame()
         skinBackdrop(entry, 1, 1, 1, .1)
         entry:Hide()
 
-        ---@type Frame
+        ---@type table|BackdropTemplate|Frame
         entry.item = CreateFrame("Button", nil, entry, "BackdropTemplate")
         entry.item:SetSize(20, 20)
         --entry.item:Hide()
@@ -352,7 +352,7 @@ function AddOn.createLootFrame()
         entry.name:SetTextColor(1, 1, 1)
         entry.name:SetPoint("LEFT", entry, "LEFT", 90, 0)
 
-        ---@type Frame
+        ---@type table|BackdropTemplate|Frame
         entry.looterEq1 = CreateFrame("Button", nil, entry, "BackdropTemplate")
         entry.looterEq1:SetSize(20, 20)
         --entry.looterEq1:Hide()
@@ -367,7 +367,7 @@ function AddOn.createLootFrame()
         entry.looterEq1.tex:SetPoint("TOPLEFT", entry.looterEq1, "TOPLEFT", 2, -2)
         entry.looterEq1.tex:SetPoint("BOTTOMRIGHT", entry.looterEq1, "BOTTOMRIGHT", -2, 2)
 
-        ---@type Frame
+        ---@type table|BackdropTemplate|Frame
         entry.looterEq2 = CreateFrame("Button", nil, entry, "BackdropTemplate")
         entry.looterEq2:SetSize(20, 20)
         entry.looterEq2:Hide()
@@ -383,7 +383,7 @@ function AddOn.createLootFrame()
         entry.looterEq2.tex:SetPoint("TOPLEFT", entry.looterEq2, "TOPLEFT", 2, -2)
         entry.looterEq2.tex:SetPoint("BOTTOMRIGHT", entry.looterEq2, "BOTTOMRIGHT", -2, 2)
 
-        ---@type Button
+        ---@type table|BackdropTemplate|Button
         entry.whisper = CreateFrame("Button", nil, entry, "BackdropTemplate")
         entry.whisper:SetSize(45, 20)
         entry.whisper:SetPoint("RIGHT", entry, "RIGHT", -30, 0)
@@ -395,7 +395,7 @@ function AddOn.createLootFrame()
         end)
         entry.whisper:Hide()
 
-        ---@type Button
+        ---@type table|BackdropTemplate|Button
         entry.delete = CreateFrame("Button", nil, entry, "BackdropTemplate")
         entry.delete:SetSize(25, 20)
         entry.delete:SetPoint("RIGHT", entry, "RIGHT", -7, 0)
@@ -431,32 +431,35 @@ function AddOn.createOptionsFrame()
     options.name = "DoYouNeedThat"
 
     -- Debug toggle
-    ---@type CheckButton
+    ---@type table|BackdropTemplate|CheckButton
     options.debug = CreateFrame("CheckButton", "DYNT_Options_Debug", options, "ChatConfigCheckButtonTemplate")
     options.debug:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -20)
-    DYNT_Options_DebugText:SetText(L["Debug"])
+    -- DYNT_Options_DebugText:SetText(L["Debug"])
+    getglobal(options.debug:GetName() .. 'Text'):SetText(L["Debug"]);
     if AddOn.Config.debug then options.debug:SetChecked(true) end
     options.debug:SetScript("OnClick", function(self)
         AddOn.db.config.debug = self:GetChecked()
     end)
 
     -- Open after boss kill toggle
-    ---@type CheckButton
+    ---@type table|BackdropTemplate|CheckButton
     options.openAfterEncounter = CreateFrame("CheckButton", "DYNT_Options_OpenAfterEncounter", options,
         "ChatConfigCheckButtonTemplate")
     options.openAfterEncounter:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -50)
-    DYNT_Options_OpenAfterEncounterText:SetText(L["Open loot window after encounter"])
+    -- DYNT_Options_OpenAfterEncounterText:SetText(L["Open loot window after encounter"])
+    getglobal(options.openAfterEncounter:GetName() .. 'Text'):SetText(L["Open loot window after encounter"]);
     if AddOn.Config.openAfterEncounter then options.openAfterEncounter:SetChecked(true) end
     options.openAfterEncounter:SetScript("OnClick", function(self)
         AddOn.db.config.openAfterEncounter = self:GetChecked()
     end)
 
     -- Check item is Transmogable
-    ---@type CheckButton
+    ---@type table|BackdropTemplate|CheckButton
     options.checkTransmogable = CreateFrame("CheckButton", "DYNT_Options_CheckTransmogable", options,
         "ChatConfigCheckButtonTemplate")
     options.checkTransmogable:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -80)
-    DYNT_Options_CheckTransmogableText:SetText(L["OPTIONS_CHECK_TRANSMOG"])
+    -- DYNT_Options_CheckTransmogableText:SetText(L["OPTIONS_CHECK_TRANSMOG"])
+    getglobal(options.checkTransmogable:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_TRANSMOG"]);
     if AddOn.Config.checkTransmogable then options.checkTransmogable:SetChecked(true) end
     options.checkTransmogable:SetScript("OnClick", function(self)
         AddOn.db.config.checkTransmogable = self:GetChecked()
@@ -464,28 +467,30 @@ function AddOn.createOptionsFrame()
     end)
 
     -- Show optional source too
-    ---@type CheckButton
+    ---@type table|BackdropTemplate|CheckButton
     options.checkTransmogableSource = CreateFrame("CheckButton", "DYNT_Options_CheckTransmogableSource", options,
         "ChatConfigCheckButtonTemplate")
     options.checkTransmogableSource:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -110)
-    DYNT_Options_CheckTransmogableSourceText:SetText(L["OPTIONS_CHECK_TRANSMOG_OPTIONAL"])
+    -- DYNT_Options_CheckTransmogableSourceText:SetText(L["OPTIONS_CHECK_TRANSMOG_OPTIONAL"])
+    getglobal(options.checkTransmogableSource:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_TRANSMOG_OPTIONAL"]);
     if AddOn.Config.checkTransmogableSource then options.checkTransmogableSource:SetChecked(true) end
     options.checkTransmogableSource:SetScript("OnClick", function(self)
         AddOn.db.config.checkTransmogableSource = self:GetChecked()
     end)
 
     -- Hide minimap button
-    ---@type CheckButton
+    ---@type table|BackdropTemplate|CheckButton
     options.hideMinimap = CreateFrame("CheckButton", "DYNT_Options_HideMinimap", options, "ChatConfigCheckButtonTemplate")
     options.hideMinimap:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -140)
-    DYNT_Options_HideMinimapText:SetText(L["Hide minimap button"])
+    -- DYNT_Options_HideMinimapText:SetText(L["Hide minimap button"])
+    getglobal(options.hideMinimap:GetName() .. 'Text'):SetText(L["Hide minimap button"]);
     if AddOn.db.minimap.hide then options.hideMinimap:SetChecked(true) end
     options.hideMinimap:SetScript("OnClick", function(self)
         AddOn.db.minimap.hide = self:GetChecked()
     end)
 
     -- Whisper message
-    ---@type EditBox
+    ---@type table|BackdropTemplate|EditBox
     options.whisperMessage = CreateFrame("EditBox", "DYNT_Options_WhisperMessage", options, "InputBoxTemplate")
     options.whisperMessage:SetSize(200, 32)
     options.whisperMessage:SetPoint("TOPLEFT", options, "TOPLEFT", 28, -190)
