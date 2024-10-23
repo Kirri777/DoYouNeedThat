@@ -60,7 +60,7 @@ function AddOn.Debug(msg)
     if AddOn.Config.debug then AddOn.Print(msg) end
 end
 
-function AddOn:kirriCheckInGroup()
+function AddOn:checkInGroupOrRaid()
     return (IsInGroup() or IsInRaid()) and true or false
 end
 
@@ -245,8 +245,8 @@ function AddOn:BOSS_KILL(encounterID, encounterName)
     self.Debug("encounterName:" .. encounterName)
 -- function AddOn:BOSS_KILL(encounterID)
     -- Dont open frame when you dont in group
-    if not self:kirriCheckInGroup() then
-        self.Debug("kirriCheckInGroup: false")
+    if not self:checkInGroupOrRaid() then
+        self.Debug("checkInGroupOrRaid: false")
         return
     end
 
@@ -263,6 +263,31 @@ function AddOn:BOSS_KILL(encounterID, encounterName)
     end
 end
 
+--[[
+    CHALLENGE_MODE_COMPLETED event handler. This function is called when the player completes a Mythic+ dungeon.
+    It checks if the player is in a group and if the encounter was not a Mythic Keystone (M+)
+    If the conditions are met, it clears the entries and shows the loot frame, if the user has enabled
+    the option to open the frame after an encounter.
+
+    @see https://wowpedia.fandom.com/wiki/CHALLENGE_MODE_COMPLETED
+--]]
+function AddOn:CHALLENGE_MODE_COMPLETED()
+    self.Debug("CHALLENGE_MODE_COMPLETED")
+
+    -- Dont open frame when you dont in group
+    if not self:checkInGroupOrRaid() then
+        self.Debug("checkInGroupOrRaid: false")
+        return
+    end
+
+    -- Clear all entries in the loot table
+    self:ClearEntries()
+
+    -- Don't open if its disabled
+    if self.Config.openAfterEncounter then
+        self.lootFrame:Show()
+    end
+end
 --[[
     Checks if the given encounter ID corresponds to a last boss in a Mythic+ dungeon.
 
@@ -290,6 +315,7 @@ function AddOn:PLAYER_ENTERING_WORLD()
         -- self.Debug("Not in instance, unregistering events")
         self.EventFrame:UnregisterEvent("CHAT_MSG_LOOT")
         self.EventFrame:UnregisterEvent("BOSS_KILL")
+        self.EventFrame:UnregisterEvent("CHALLENGE_MODE_COMPLETED")
         if self.InspectTimer then
             self.InspectTimer:Cancel()
             self.InspectTimer = nil
@@ -299,6 +325,7 @@ function AddOn:PLAYER_ENTERING_WORLD()
     self.Debug("In instance, registering events")
     self.EventFrame:RegisterEvent("CHAT_MSG_LOOT")
     self.EventFrame:RegisterEvent("BOSS_KILL")
+    self.EventFrame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
     -- Set repeated timer to check for raidmembers inventory
     self.InspectTimer = C_Timer.NewTicker(7, function() self.InspectGroup() end)
 end
