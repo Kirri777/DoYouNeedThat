@@ -75,8 +75,8 @@ function AddOn:kirriGetLinkDebug(message)
     return link
 end
 
-function AddOn:kirriGetLink(message)
-    self.Debug("kirriGetLink")
+function AddOn:getItemLinkFromChat(message)
+    self.Debug("getItemLinkFromChat")
     local LOOT_ITEM_PATTERN = _G['LOOT_ITEM']:gsub("%%s", "(.+)")
     local LOOT_ITEM_PUSHED_PATTERN = _G['LOOT_ITEM_PUSHED']:gsub("%%s", "(.+)")
     local LOOT_ITEM_MULTIPLE_PATTERN = _G['LOOT_ITEM_MULTIPLE']:gsub("%%s", "(.+)")
@@ -111,10 +111,10 @@ end
 function AddOn:CHAT_MSG_LOOT(...)
     self.Debug("CHAT_MSG_LOOT")
     local message, _, _, _, looter = ...
-    local messageItemLink = self:kirriGetLink(message)
+    local messageItemLink = self:getItemLinkFromChat(message)
 
     if not messageItemLink then
-        self.Debug("kirriGetLink: false")
+        self.Debug("getItemLinkFromChat: false")
         return
     end
 
@@ -451,6 +451,10 @@ function AddOn:AddItemToLootTable(t)
     entry.itemLink = t[1]
     entry.looter = t[2]
     entry.guid = UnitGUID(character)
+
+    
+    -- print('ilvl', ilvl, 'equipLoc', equipLoc)
+    self.Debug("equipLoc: " .. equipLoc)
 
     -- If looter has been inspected, show their equipped items in those slots
     if self.RaidMembers[entry.guid] then
