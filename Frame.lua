@@ -487,6 +487,12 @@ function AddOn.createOptionsFrame()
     if AddOn.db.minimap.hide then options.hideMinimap:SetChecked(true) end
     options.hideMinimap:SetScript("OnClick", function(self)
         AddOn.db.minimap.hide = self:GetChecked()
+
+        if not self:GetChecked() then
+            icon:Show("DoYouNeedThat")
+        else
+            icon:Hide("DoYouNeedThat")
+        end
     end)
 
     -- Whisper message
@@ -501,6 +507,7 @@ function AddOn.createOptionsFrame()
     options.whisperMessage:SetCursorPosition(0)
     options.whisperMessage:SetScript("OnEditFocusGained", function() --[[ Override to not highlight the text ]] end)
     options.whisperMessage:SetScript("OnEnterPressed", function(self)
+        AddOn.db.config.whisperMessage = self:GetText()
         self:ClearFocus()
     end)
 
