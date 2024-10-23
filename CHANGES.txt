@@ -1,9 +1,0 @@
-lightweight tag 45086c1872c79f34b027ba877086e42a7b540754 1.1.7
-Author:	Rickard Ekman <xm0rfin@gmail.com>
-Date:	Mon Nov 23 21:32:53 2020 +0100
-
-commit 45086c1872c79f34b027ba877086e42a7b540754
-Author: Rickard Ekman <xm0rfin@gmail.com>
-Date:   Mon Nov 23 21:32:53 2020 +0100
-
-1.1.7

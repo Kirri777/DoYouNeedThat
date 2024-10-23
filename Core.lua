@@ -60,7 +60,7 @@ function AddOn.Debug(msg)
     if AddOn.Config.debug then AddOn.Print(msg) end
 end
 
-function AddOn:kirriCheckInGroup()
+function AddOn:checkInGroupOrRaid()
     return (IsInGroup() or IsInRaid()) and true or false
 end
 
@@ -75,8 +75,8 @@ function AddOn:kirriGetLinkDebug(message)
     return link
 end
 
-function AddOn:kirriGetLink(message)
-    self.Debug("kirriGetLink")
+function AddOn:getItemLinkFromChat(message)
+    self.Debug("getItemLinkFromChat")
     local LOOT_ITEM_PATTERN = _G['LOOT_ITEM']:gsub("%%s", "(.+)")
     local LOOT_ITEM_PUSHED_PATTERN = _G['LOOT_ITEM_PUSHED']:gsub("%%s", "(.+)")
     local LOOT_ITEM_MULTIPLE_PATTERN = _G['LOOT_ITEM_MULTIPLE']:gsub("%%s", "(.+)")
@@ -111,10 +111,10 @@ end
 function AddOn:CHAT_MSG_LOOT(...)
     self.Debug("CHAT_MSG_LOOT")
     local message, _, _, _, looter = ...
-    local messageItemLink = self:kirriGetLink(message)
+    local messageItemLink = self:getItemLinkFromChat(message)
 
     if not messageItemLink then
-        self.Debug("kirriGetLink: false")
+        self.Debug("getItemLinkFromChat: false")
         return
     end
 
@@ -239,10 +239,14 @@ end
     @see https://wowpedia.fandom.com/wiki/DifficultyID
     @see https://wowpedia.fandom.com/wiki/BOSS_KILL
 --]]
-function AddOn:BOSS_KILL()
+function AddOn:BOSS_KILL(encounterID, encounterName)
+    self.Debug("BOSS_KILL")
+    self.Debug("encounterID:" .. encounterID)
+    self.Debug("encounterName:" .. encounterName)
+-- function AddOn:BOSS_KILL(encounterID)
     -- Dont open frame when you dont in group
-    if not self:kirriCheckInGroup() then
-        self.Debug("kirriCheckInGroup: false")
+    if not self:checkInGroupOrRaid() then
+        self.Debug("checkInGroupOrRaid: false")
         return
     end
 
@@ -251,9 +255,57 @@ function AddOn:BOSS_KILL()
     self:ClearEntries()
 
     -- Don't open if its M+ (8 is Mythic Keystone)
-    if self.Config.openAfterEncounter and difficulty ~= 8 then
+    -- if self.Config.openAfterEncounter and difficulty ~= 8 then
+    --     self.lootFrame:Show()
+    -- end
+    if self.Config.openAfterEncounter and (difficulty ~= 8 or self:isLastBossMythicPlus(encounterID)) then
         self.lootFrame:Show()
     end
+end
+
+--[[
+    CHALLENGE_MODE_COMPLETED event handler. This function is called when the player completes a Mythic+ dungeon.
+    It checks if the player is in a group and if the encounter was not a Mythic Keystone (M+)
+    If the conditions are met, it clears the entries and shows the loot frame, if the user has enabled
+    the option to open the frame after an encounter.
+
+    @see https://wowpedia.fandom.com/wiki/CHALLENGE_MODE_COMPLETED
+--]]
+function AddOn:CHALLENGE_MODE_COMPLETED()
+    self.Debug("CHALLENGE_MODE_COMPLETED")
+
+    -- Dont open frame when you dont in group
+    if not self:checkInGroupOrRaid() then
+        self.Debug("checkInGroupOrRaid: false")
+        return
+    end
+
+    -- Clear all entries in the loot table
+    self:ClearEntries()
+
+    -- Don't open if its disabled
+    if self.Config.openAfterEncounter then
+        self.lootFrame:Show()
+    end
+end
+--[[
+    Checks if the given encounter ID corresponds to a last boss in a Mythic+ dungeon.
+
+    @param encounterId The encounter ID to check.
+    @return True if the encounter ID is a last boss in a Mythic+ dungeon, false otherwise.
+--]]
+function AddOn:isLastBossMythicPlus(encounterId)
+    -- Convert the encounter ID to a number
+    encounterId = AddOn:getNumberOrZero(encounterId)
+
+    -- Iterate through the list of Mythic+ last boss IDs
+    for _, id in ipairs(self.Utils.MythicPlusLastBosses) do
+        -- Check if the current ID matches the provided encounter ID
+        if AddOn:getNumberOrZero(id) == encounterId then
+            return true -- Return true if a match is found
+        end
+    end
+    return false -- Return false if no match is found
 end
 
 function AddOn:PLAYER_ENTERING_WORLD()
@@ -263,6 +315,7 @@ function AddOn:PLAYER_ENTERING_WORLD()
         -- self.Debug("Not in instance, unregistering events")
         self.EventFrame:UnregisterEvent("CHAT_MSG_LOOT")
         self.EventFrame:UnregisterEvent("BOSS_KILL")
+        self.EventFrame:UnregisterEvent("CHALLENGE_MODE_COMPLETED")
         if self.InspectTimer then
             self.InspectTimer:Cancel()
             self.InspectTimer = nil
@@ -272,6 +325,7 @@ function AddOn:PLAYER_ENTERING_WORLD()
     self.Debug("In instance, registering events")
     self.EventFrame:RegisterEvent("CHAT_MSG_LOOT")
     self.EventFrame:RegisterEvent("BOSS_KILL")
+    self.EventFrame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
     -- Set repeated timer to check for raidmembers inventory
     self.InspectTimer = C_Timer.NewTicker(7, function() self.InspectGroup() end)
 end
@@ -424,6 +478,10 @@ function AddOn:AddItemToLootTable(t)
     entry.itemLink = t[1]
     entry.looter = t[2]
     entry.guid = UnitGUID(character)
+
+    
+    -- print('ilvl', ilvl, 'equipLoc', equipLoc)
+    self.Debug("equipLoc: " .. equipLoc)
 
     -- If looter has been inspected, show their equipped items in those slots
     if self.RaidMembers[entry.guid] then
@@ -613,12 +671,22 @@ AddOn.EventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     Returns the number if the value is a number, or false if not.
 
     @param x The value to check
-
     @return The number if the value is a number, or false if not.
 --]]
 function AddOn:getNumber(x)
     local number = tonumber(x)
     return number and number or false
+end
+
+--[[
+    Converts the input value to a number if possible, otherwise returns zero.
+
+    @param x The value to convert to a number.
+    @return The number if conversion is successful, or zero if not.
+--]]
+function AddOn:getNumberOrZero(x)
+    local number = tonumber(x)
+    return number and number or 0
 end
 
 local function SlashCommandHandler(msg)

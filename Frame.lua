@@ -471,8 +471,8 @@ function AddOn.createOptionsFrame()
     options.checkTransmogableSource = CreateFrame("CheckButton", "DYNT_Options_CheckTransmogableSource", options,
         "ChatConfigCheckButtonTemplate")
     options.checkTransmogableSource:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -110)
-    -- DYNT_Options_CheckTransmogableSourceText:SetText(L["OPTIONS_CHECK_TRANSMOG_OPTIONAL"])
-    getglobal(options.checkTransmogableSource:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_TRANSMOG_OPTIONAL"]);
+    -- DYNT_Options_CheckTransmogableSourceText:SetText(L["OPTIONS_CHECK_TRANSMOG_OTHER_SOURCES"])
+    getglobal(options.checkTransmogableSource:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_TRANSMOG_OTHER_SOURCES"]);
     if AddOn.Config.checkTransmogableSource then options.checkTransmogableSource:SetChecked(true) end
     options.checkTransmogableSource:SetScript("OnClick", function(self)
         AddOn.db.config.checkTransmogableSource = self:GetChecked()
@@ -487,6 +487,12 @@ function AddOn.createOptionsFrame()
     if AddOn.db.minimap.hide then options.hideMinimap:SetChecked(true) end
     options.hideMinimap:SetScript("OnClick", function(self)
         AddOn.db.minimap.hide = self:GetChecked()
+
+        if not self:GetChecked() then
+            icon:Show("DoYouNeedThat")
+        else
+            icon:Hide("DoYouNeedThat")
+        end
     end)
 
     -- Whisper message
@@ -501,6 +507,7 @@ function AddOn.createOptionsFrame()
     options.whisperMessage:SetCursorPosition(0)
     options.whisperMessage:SetScript("OnEditFocusGained", function() --[[ Override to not highlight the text ]] end)
     options.whisperMessage:SetScript("OnEnterPressed", function(self)
+        AddOn.db.config.whisperMessage = self:GetText()
         self:ClearFocus()
     end)
 
