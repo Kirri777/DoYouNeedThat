@@ -51,6 +51,8 @@ AddOn.Entries = {}
 AddOn.RaidMembers = {}
 AddOn.Config = {}
 AddOn.inspectCount = 1
+AddOn.instanceType = 'none'
+AddOn.eventsLoaded = false
 
 function AddOn.Print(msg)
     print("[|cff3399FFDYNT|r] " .. msg)
@@ -188,14 +190,31 @@ function AddOn:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass,
     return true, mog
 end
 
+--[[
+    Checks if an item is transmogable and returns its status.
+
+    If the CanIMogIt library is outdated, it will return false and a not transmogable icon.
+    If the item is not transmogable, it will return false and a not transmogable icon.
+    If the player knows the transmog, it will return false and a known icon.
+    If the player does not know the transmog, but another character knows it, it will return true and a known circle icon
+    if the user has enabled the option to check the source of the transmog.
+    If the player does not know the transmog and no other character knows it, it will return true and an unknown icon.
+
+    @param itemLink The link to the item to be checked.
+
+    @return checkTransmogable (bool) Whether the item is transmogable.
+    @return mog (string) The icon to be used to represent the state of the item.
+--]]
 function AddOn:checkAddItemTransmog(itemLink)
     local mog = '|TInterface\\AddOns\\CanIMogIt\\Icons\\not_transmogable:0|t'
 
+    -- Check if the user has enabled the option to check if the item is transmogable
     if not self.db.config.checkTransmogable then
         self.Debug("checkTransmogable: false")
         return false, mog
     end
 
+    -- Check if the CanIMogIt library is outdated
     local isTransmogable, isKnown, isOtherKnown, isOutdated = self:CanIMogItCheckItem(itemLink)
 
     if isOutdated then
@@ -203,20 +222,23 @@ function AddOn:checkAddItemTransmog(itemLink)
         return false, mog
     end
 
+    -- Check if the item is transmogable
     if not isTransmogable then
         self.Debug("CanIMogIt - isTransmogable: false")
         return false, mog
     end
 
+    -- Check if the player knows the transmog
     if isKnown then
         mog = '|TInterface\\AddOns\\CanIMogIt\\Icons\\known:0|t'
         self.Debug("CanIMogIt - isKnown: true")
         return false, mog
     end
 
+    -- Check if another character knows the transmog
     if isOtherKnown then
         mog = '|TInterface\\AddOns\\CanIMogIt\\Icons\\known_circle:0|t'
-
+        -- Check if the user has enabled the option to check the source of the transmog
         if self.db.config.checkTransmogableSource then
             self.Debug("CanIMogIt - isOtherKnown and checkTransmogableSource: true")
             return true, mog
@@ -226,6 +248,7 @@ function AddOn:checkAddItemTransmog(itemLink)
         return false, mog
     end
 
+    -- If the player does not know the transmog and no other character knows it
     mog = '|TInterface\\AddOns\\CanIMogIt\\Icons\\unknown:0|t'
     return true, mog
 end
@@ -238,12 +261,17 @@ end
 
     @see https://wowpedia.fandom.com/wiki/DifficultyID
     @see https://wowpedia.fandom.com/wiki/BOSS_KILL
+
+    @param encounterID The encounter ID of the boss that was killed.
+    @param encounterName The name of the boss that was killed.
+
+    @return void
 --]]
 function AddOn:BOSS_KILL(encounterID, encounterName)
     self.Debug("BOSS_KILL")
     self.Debug("encounterID:" .. encounterID)
     self.Debug("encounterName:" .. encounterName)
--- function AddOn:BOSS_KILL(encounterID)
+    
     -- Dont open frame when you dont in group
     if not self:checkInGroupOrRaid() then
         self.Debug("checkInGroupOrRaid: false")
@@ -254,12 +282,10 @@ function AddOn:BOSS_KILL(encounterID, encounterName)
     -- Clear all entries in the loot table
     self:ClearEntries()
 
-    -- Don't open if its M+ (8 is Mythic Keystone)
-    -- if self.Config.openAfterEncounter and difficulty ~= 8 then
-    --     self.lootFrame:Show()
-    -- end
+    -- Don't open if its disabled or its not the right difficultyID
     if self.Config.openAfterEncounter and (difficulty ~= 8 or self:isLastBossMythicPlus(encounterID)) then
         self.lootFrame:Show()
+        self.db.lootWindowOpen = true
     end
 end
 
@@ -270,6 +296,8 @@ end
     the option to open the frame after an encounter.
 
     @see https://wowpedia.fandom.com/wiki/CHALLENGE_MODE_COMPLETED
+
+    @return void
 --]]
 function AddOn:CHALLENGE_MODE_COMPLETED()
     self.Debug("CHALLENGE_MODE_COMPLETED")
@@ -286,8 +314,10 @@ function AddOn:CHALLENGE_MODE_COMPLETED()
     -- Don't open if its disabled
     if self.Config.openAfterEncounter then
         self.lootFrame:Show()
+        self.db.lootWindowOpen = true
     end
 end
+
 --[[
     Checks if the given encounter ID corresponds to a last boss in a Mythic+ dungeon.
 
@@ -308,26 +338,89 @@ function AddOn:isLastBossMythicPlus(encounterId)
     return false -- Return false if no match is found
 end
 
+--[[
+    Handles the PLAYER_ENTERING_WORLD event. This function is triggered when the player enters the world,
+    either by logging in, reloading the UI, or changing zones.
+    It determines the type of instance the player is in and decides whether to register or unregister events 
+    based on the configuration settings and instance type.
+
+    @return void
+--]]
 function AddOn:PLAYER_ENTERING_WORLD()
+    -- Retrieve the current instance type
     local _, instanceType = GetInstanceInfo()
-    self.Debug("PLAYER_ENTERING_WORLD - instanceType: " .. instanceType)
-    if instanceType == "none" then
-        -- self.Debug("Not in instance, unregistering events")
-        self.EventFrame:UnregisterEvent("CHAT_MSG_LOOT")
-        self.EventFrame:UnregisterEvent("BOSS_KILL")
-        self.EventFrame:UnregisterEvent("CHALLENGE_MODE_COMPLETED")
-        if self.InspectTimer then
-            self.InspectTimer:Cancel()
-            self.InspectTimer = nil
-        end
+    -- Store the instance type in the AddOn object
+    AddOn.instanceType = instanceType
+
+    -- Log the instance type for debugging purposes
+    self.Debug("PLAYER_ENTERING_WORLD - instanceType: " .. AddOn.instanceType)
+
+    -- Register events if the loot frame should be shown everywhere or if the player is in an instance
+    if self.db.config.chatShowLootFrame == "everywhere" or AddOn.instanceType ~= "none" then
+        AddOn:registerEvents()
         return
     end
-    self.Debug("In instance, registering events")
+
+    -- Unregister events if the conditions above are not met
+    AddOn:unregisterEvents()
+end
+
+--[[
+    Registers the necessary events for the AddOn and sets up a repeated timer to inspect group members.
+    This function ensures that events are only registered once and starts a timer for periodic inspection.
+    
+    @return void
+--]]
+function AddOn:registerEvents()
+    self.Debug("registerEvents")
+
+    -- Check if events are already loaded to avoid duplicate registration
+    if AddOn.eventsLoaded then
+        return
+    end
+
+    -- Register events for loot messages, boss kills, and challenge mode completion
     self.EventFrame:RegisterEvent("CHAT_MSG_LOOT")
     self.EventFrame:RegisterEvent("BOSS_KILL")
     self.EventFrame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
-    -- Set repeated timer to check for raidmembers inventory
+
+    -- Set a repeated timer every 7 seconds to check the inventory of raid members
     self.InspectTimer = C_Timer.NewTicker(7, function() self.InspectGroup() end)
+
+    -- Mark events as loaded to prevent re-registration
+    AddOn.eventsLoaded = true
+end
+
+--[[
+    Unregisters the events for the AddOn and cancels the repeated timer for inspection.
+
+    This function is the counterpart to registerEvents() and is called when the player is no longer
+    in a group or raid. It ensures that events are not registered multiple times and stops the timer
+    for periodic inspection to prevent excessive CPU usage.
+
+    @return void
+--]]
+function AddOn:unregisterEvents()
+    self.Debug("unregisterEvents")
+
+    -- Check if events are already unloaded to avoid duplicate unregistration
+    if not AddOn.eventsLoaded then
+        return
+    end
+
+    -- Unregister events for loot messages, boss kills, and challenge mode completion
+    self.EventFrame:UnregisterEvent("CHAT_MSG_LOOT")
+    self.EventFrame:UnregisterEvent("BOSS_KILL")
+    self.EventFrame:UnregisterEvent("CHALLENGE_MODE_COMPLETED")
+
+    -- Cancel the repeated timer for inspection
+    if self.InspectTimer then
+        self.InspectTimer:Cancel()
+        self.InspectTimer = nil
+    end
+
+    -- Mark events as unloaded to prevent re-registration
+    AddOn.eventsLoaded = false
 end
 
 function AddOn:ADDON_LOADED(addon)
@@ -345,6 +438,7 @@ function AddOn:ADDON_LOADED(addon)
                 debug = false,
                 checkTransmogable = true,
                 checkTransmogableSource = true,
+                chatShowLootFrame = 'disabled',
                 minDelta = 0,
             },
             minimap = {
@@ -358,6 +452,11 @@ function AddOn:ADDON_LOADED(addon)
     -- Set minDelta default if its not a fresh install
     if not self.db.config.minDelta then
         self.db.config.minDelta = 0
+    end
+
+    -- Set chatShowLootFrameEverywhere default if its not a fresh install
+    if not self.db.config.chatShowLootFrame then
+        self.db.config.chatShowLootFrame = 'disabled'
     end
 
     self.createLootFrame()
@@ -471,6 +570,9 @@ end
 function AddOn:AddItemToLootTable(t)
     -- Itemlink, Looter, Ilvl
     self.Debug("Adding item to entries")
+
+    AddOn:ShowLootFrameFromChat()
+
     local entry = self:GetEntry(t[1], t[2])
     local _, _, _, equipLoc, _, _, itemSubClass = GetItemInfoInstant(t[1])
     local character = t[2]:match("(.*)%-") or t[2]
@@ -516,6 +618,34 @@ function AddOn:AddItemToLootTable(t)
 
     entry.whisper:Show()
     entry:Show()
+end
+
+function AddOn:ShowLootFrameFromChat()
+    self.Debug("ShowLootFrame")
+
+    -- check is opened
+    if self.db.lootWindowOpen or self.Config.chatShowLootFrame == "disabled" then
+        return
+    end
+
+    if not self:checkInGroupOrRaid() then
+        self.Debug("checkInGroupOrRaid: false")
+        return
+    end
+
+    if self.Config.chatShowLootFrame == "everywhere" then
+        self.lootFrame:Show()
+        self.db.lootWindowOpen = true
+        return
+    end
+
+    -- local _, instanceType = GetInstanceInfo()
+    self.Debug("ShowLootFrameFromChat - instanceType: " .. AddOn.instanceType)
+
+    if AddOn.instanceType ~= "none" then
+        self.lootFrame:Show()
+        self.db.lootWindowOpen = true
+    end
 end
 
 --[[
