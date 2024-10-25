@@ -347,8 +347,6 @@ function AddOn:ADDON_LOADED(addon)
                 debug = false,
                 checkTransmogable = true,
                 checkTransmogableSource = true,
-                chatShowOnlyInDungeonOrRaid = true,
-                chatShowLootFrameEverywhere = true,
                 chatShowLootFrame = 'disabled',
                 minDelta = 0,
             },
@@ -365,15 +363,6 @@ function AddOn:ADDON_LOADED(addon)
         self.db.config.minDelta = 0
     end
 
-    -- Set chatShowOnlyInDungeonOrRaid default if its not a fresh install
-    if not self.db.config.chatShowOnlyInDungeonOrRaid then
-        self.db.config.chatShowOnlyInDungeonOrRaid = false
-    end
-
-    -- Set chatShowLootFrameEverywhere default if its not a fresh install
-    if not self.db.config.chatShowLootFrameEverywhere then
-        self.db.config.chatShowLootFrameEverywhere = false
-    end
     -- Set chatShowLootFrameEverywhere default if its not a fresh install
     if not self.db.config.chatShowLootFrame then
         self.db.config.chatShowLootFrame = 'disabled'
@@ -544,7 +533,7 @@ function AddOn:ShowLootFrameFromChat()
     self.Debug("ShowLootFrame")
 
     -- check is opened
-    if self.db.lootWindowOpen or (not self.Config.chatShowLootFrameEverywhere and not self.Config.chatShowOnlyInDungeonOrRaid) then
+    if self.db.lootWindowOpen or self.Config.chatShowLootFrame == "disabled" then
         return
     end
 
@@ -553,16 +542,16 @@ function AddOn:ShowLootFrameFromChat()
         return
     end
 
-    if self.Config.chatShowLootFrameEverywhere then
+    if self.Config.chatShowLootFrame == "everywhere" then
         self.lootFrame:Show()
         self.db.lootWindowOpen = true
         return
     end
 
     local _, instanceType = GetInstanceInfo()
-    self.Debug("PLAYER_ENTERING_WORLD - instanceType: " .. instanceType)
+    self.Debug("ShowLootFrameFromChat - instanceType: " .. instanceType)
 
-    if instanceType ~= "none" and self.Config.chatShowOnlyInDungeonOrRaid then
+    if instanceType ~= "none" then
         self.lootFrame:Show()
         self.db.lootWindowOpen = true
     end

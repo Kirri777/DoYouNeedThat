@@ -478,28 +478,6 @@ function AddOn.createOptionsFrame()
         AddOn.db.config.checkTransmogableSource = self:GetChecked()
     end)
 
-    -- Show loot frame dungeon or raid
-    -- ---@type table|BackdropTemplate|CheckButton
-    -- options.chatShowOnlyInDungeonOrRaid = CreateFrame("CheckButton", "DYNT_Options_ChatShowOnlyInDungeonOrRaid", options,
-    --     "ChatConfigCheckButtonTemplate")
-    -- options.chatShowOnlyInDungeonOrRaid:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -140)
-    -- getglobal(options.chatShowOnlyInDungeonOrRaid:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_CHAT_SHOW_ONLY_IN_DUNGEON_OR_RAID"]);
-    -- if AddOn.Config.chatShowOnlyInDungeonOrRaid then options.chatShowOnlyInDungeonOrRaid:SetChecked(true) end
-    -- options.chatShowOnlyInDungeonOrRaid:SetScript("OnClick", function(self)
-    --     AddOn.db.config.chatShowOnlyInDungeonOrRaid = self:GetChecked()
-    -- end)
-
-    -- -- Show loot frame everywhere
-    -- ---@type table|BackdropTemplate|CheckButton
-    -- options.chatShowLootFrameEverywhere = CreateFrame("CheckButton", "DYNT_Options_ChatShowLootFrameEverywhere", options,
-    --     "ChatConfigCheckButtonTemplate")
-    -- options.chatShowLootFrameEverywhere:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -170)
-    -- getglobal(options.chatShowLootFrameEverywhere:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_CHAT_SHOW_LOOT_FRAME_EVERYWHERE"]);
-    -- if AddOn.Config.chatShowLootFrameEverywhere then options.chatShowLootFrameEverywhere:SetChecked(true) end
-    -- options.chatShowLootFrameEverywhere:SetScript("OnClick", function(self)
-    --     AddOn.db.config.chatShowLootFrameEverywhere = self:GetChecked()
-    -- end)
-
     -- Hide minimap button
     ---@type table|BackdropTemplate|CheckButton
     options.hideMinimap = CreateFrame("CheckButton", "DYNT_Options_HideMinimap", options, "ChatConfigCheckButtonTemplate")
@@ -548,8 +526,7 @@ function AddOn.createOptionsFrame()
     options.chatShowLootFrame.labelText:SetTextColor(1, 1, 1)
     options.chatShowLootFrame.labelText:SetShadowColor(0, 0, 0)
     options.chatShowLootFrame.labelText:SetShadowOffset(1, -1)
-    options.chatShowLootFrame.labelText:SetText(L["Whisper Message"])
-
+    options.chatShowLootFrame.labelText:SetText(L["OPTIONS_CHECK_CHAT_SHOW_LOOT_FRAME"])
 
     -- Whisper message
     ---@type table|BackdropTemplate|EditBox
