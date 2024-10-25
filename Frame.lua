@@ -515,6 +515,7 @@ function AddOn.createOptionsFrame()
 			info.func = function(self)
 				AddOn.db.config.chatShowLootFrame = self.value
                 getglobal(options.chatShowLootFrame:GetName() .. 'Text'):SetText(self:GetText());
+                AddOn:PLAYER_ENTERING_WORLD()
 			end
 			UIDropDownMenu_AddButton(info)
         end
