@@ -260,6 +260,7 @@ function AddOn:BOSS_KILL(encounterID, encounterName)
     -- end
     if self.Config.openAfterEncounter and (difficulty ~= 8 or self:isLastBossMythicPlus(encounterID)) then
         self.lootFrame:Show()
+        self.db.lootWindowOpen = true
     end
 end
 
@@ -286,6 +287,7 @@ function AddOn:CHALLENGE_MODE_COMPLETED()
     -- Don't open if its disabled
     if self.Config.openAfterEncounter then
         self.lootFrame:Show()
+        self.db.lootWindowOpen = true
     end
 end
 --[[
@@ -345,6 +347,9 @@ function AddOn:ADDON_LOADED(addon)
                 debug = false,
                 checkTransmogable = true,
                 checkTransmogableSource = true,
+                chatShowOnlyInDungeonOrRaid = true,
+                chatShowLootFrameEverywhere = true,
+                chatShowLootFrame = 'disabled',
                 minDelta = 0,
             },
             minimap = {
@@ -358,6 +363,20 @@ function AddOn:ADDON_LOADED(addon)
     -- Set minDelta default if its not a fresh install
     if not self.db.config.minDelta then
         self.db.config.minDelta = 0
+    end
+
+    -- Set chatShowOnlyInDungeonOrRaid default if its not a fresh install
+    if not self.db.config.chatShowOnlyInDungeonOrRaid then
+        self.db.config.chatShowOnlyInDungeonOrRaid = false
+    end
+
+    -- Set chatShowLootFrameEverywhere default if its not a fresh install
+    if not self.db.config.chatShowLootFrameEverywhere then
+        self.db.config.chatShowLootFrameEverywhere = false
+    end
+    -- Set chatShowLootFrameEverywhere default if its not a fresh install
+    if not self.db.config.chatShowLootFrame then
+        self.db.config.chatShowLootFrame = 'disabled'
     end
 
     self.createLootFrame()
@@ -471,6 +490,9 @@ end
 function AddOn:AddItemToLootTable(t)
     -- Itemlink, Looter, Ilvl
     self.Debug("Adding item to entries")
+
+    AddOn:ShowLootFrameFromChat()
+
     local entry = self:GetEntry(t[1], t[2])
     local _, _, _, equipLoc, _, _, itemSubClass = GetItemInfoInstant(t[1])
     local character = t[2]:match("(.*)%-") or t[2]
@@ -516,6 +538,34 @@ function AddOn:AddItemToLootTable(t)
 
     entry.whisper:Show()
     entry:Show()
+end
+
+function AddOn:ShowLootFrameFromChat()
+    self.Debug("ShowLootFrame")
+
+    -- check is opened
+    if self.db.lootWindowOpen or (not self.Config.chatShowLootFrameEverywhere and not self.Config.chatShowOnlyInDungeonOrRaid) then
+        return
+    end
+
+    if not self:checkInGroupOrRaid() then
+        self.Debug("checkInGroupOrRaid: false")
+        return
+    end
+
+    if self.Config.chatShowLootFrameEverywhere then
+        self.lootFrame:Show()
+        self.db.lootWindowOpen = true
+        return
+    end
+
+    local _, instanceType = GetInstanceInfo()
+    self.Debug("PLAYER_ENTERING_WORLD - instanceType: " .. instanceType)
+
+    if instanceType ~= "none" and self.Config.chatShowOnlyInDungeonOrRaid then
+        self.lootFrame:Show()
+        self.db.lootWindowOpen = true
+    end
 end
 
 --[[

@@ -478,6 +478,28 @@ function AddOn.createOptionsFrame()
         AddOn.db.config.checkTransmogableSource = self:GetChecked()
     end)
 
+    -- Show loot frame dungeon or raid
+    -- ---@type table|BackdropTemplate|CheckButton
+    -- options.chatShowOnlyInDungeonOrRaid = CreateFrame("CheckButton", "DYNT_Options_ChatShowOnlyInDungeonOrRaid", options,
+    --     "ChatConfigCheckButtonTemplate")
+    -- options.chatShowOnlyInDungeonOrRaid:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -140)
+    -- getglobal(options.chatShowOnlyInDungeonOrRaid:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_CHAT_SHOW_ONLY_IN_DUNGEON_OR_RAID"]);
+    -- if AddOn.Config.chatShowOnlyInDungeonOrRaid then options.chatShowOnlyInDungeonOrRaid:SetChecked(true) end
+    -- options.chatShowOnlyInDungeonOrRaid:SetScript("OnClick", function(self)
+    --     AddOn.db.config.chatShowOnlyInDungeonOrRaid = self:GetChecked()
+    -- end)
+
+    -- -- Show loot frame everywhere
+    -- ---@type table|BackdropTemplate|CheckButton
+    -- options.chatShowLootFrameEverywhere = CreateFrame("CheckButton", "DYNT_Options_ChatShowLootFrameEverywhere", options,
+    --     "ChatConfigCheckButtonTemplate")
+    -- options.chatShowLootFrameEverywhere:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -170)
+    -- getglobal(options.chatShowLootFrameEverywhere:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_CHAT_SHOW_LOOT_FRAME_EVERYWHERE"]);
+    -- if AddOn.Config.chatShowLootFrameEverywhere then options.chatShowLootFrameEverywhere:SetChecked(true) end
+    -- options.chatShowLootFrameEverywhere:SetScript("OnClick", function(self)
+    --     AddOn.db.config.chatShowLootFrameEverywhere = self:GetChecked()
+    -- end)
+
     -- Hide minimap button
     ---@type table|BackdropTemplate|CheckButton
     options.hideMinimap = CreateFrame("CheckButton", "DYNT_Options_HideMinimap", options, "ChatConfigCheckButtonTemplate")
@@ -495,11 +517,45 @@ function AddOn.createOptionsFrame()
         end
     end)
 
+	local chatshowlootframe_options = {
+        ['disabled'] = L["SELECT_OPTION_DISABLED"],
+        ['only_dungeon_raid'] = L["SELECT_OPTION_ONLY_DUNGEON_RAID"],
+        ['everywhere'] = L["SELECT_OPTION_EVERYWHERE"],
+    }
+
+	options.chatShowLootFrame = CreateFrame("Frame", "DYNT_Options_ChatShowLootFrame", options, "UIDropDownMenuTemplate")
+	options.chatShowLootFrame:SetPoint("TOPLEFT", options, "TOPLEFT", 3, -180)
+	-- options.chatShowLootFrame:SetWidth(150)
+    UIDropDownMenu_SetWidth(options.chatShowLootFrame, 150)
+    getglobal(options.chatShowLootFrame:GetName() .. 'Text'):SetText(chatshowlootframe_options[AddOn.db.config.chatShowLootFrame]);
+	options.chatShowLootFrame.initialize = function()
+        local info = {}
+        for key, value in pairs(chatshowlootframe_options) do
+			info.text = value
+			info.value = key
+			info.checked = key == AddOn.db.config.chatShowLootFrame
+			info.func = function(self)
+				AddOn.db.config.chatShowLootFrame = self.value
+                getglobal(options.chatShowLootFrame:GetName() .. 'Text'):SetText(self:GetText());
+			end
+			UIDropDownMenu_AddButton(info)
+        end
+	end
+
+    options.chatShowLootFrame.labelText = options.chatShowLootFrame:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
+    options.chatShowLootFrame.labelText:SetPoint("TOPLEFT", options.chatShowLootFrame, "TOPLEFT", 20, 15)
+    options.chatShowLootFrame.labelText:SetJustifyH("LEFT")
+    options.chatShowLootFrame.labelText:SetTextColor(1, 1, 1)
+    options.chatShowLootFrame.labelText:SetShadowColor(0, 0, 0)
+    options.chatShowLootFrame.labelText:SetShadowOffset(1, -1)
+    options.chatShowLootFrame.labelText:SetText(L["Whisper Message"])
+
+
     -- Whisper message
     ---@type table|BackdropTemplate|EditBox
     options.whisperMessage = CreateFrame("EditBox", "DYNT_Options_WhisperMessage", options, "InputBoxTemplate")
     options.whisperMessage:SetSize(200, 32)
-    options.whisperMessage:SetPoint("TOPLEFT", options, "TOPLEFT", 28, -190)
+    options.whisperMessage:SetPoint("TOPLEFT", options, "TOPLEFT", 28, -230)
     options.whisperMessage:SetAutoFocus(false)
     options.whisperMessage:SetMaxLetters(128)
     AddOn.Debug(AddOn.Config.whisperMessage)
@@ -524,7 +580,7 @@ function AddOn.createOptionsFrame()
     options.minDelta = CreateFrame("Slider", "DYNT_Options_MinDelta", options, "OptionsSliderTemplate")
     options.minDelta:SetWidth(300)
     options.minDelta:SetHeight(20)
-    options.minDelta:SetPoint("TOPLEFT", 28, -260)
+    options.minDelta:SetPoint("TOPLEFT", 28, -300)
     options.minDelta:SetOrientation("HORIZONTAL")
     options.minDelta:SetMinMaxValues(0, 100)
     options.minDelta:SetValue(AddOn.Config.minDelta)
