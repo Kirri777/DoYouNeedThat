@@ -1,0 +1,10 @@
+tag ea27b703313ab441879c95f486a76c563dce6e02 0.3.7
+Author:	scotepi <github@scotepi.net>
+Date:	Wed Nov 18 20:06:38 2020 -0500
+
+commit f3b126fe8afb5398f4045f404a5506d42b3d0fcb
+Author: scotepi <github@scotepi.net>
+Date:   Wed Nov 18 20:05:26 2020 -0500
+
+    TOC Bump
+

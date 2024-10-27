@@ -2,7 +2,7 @@
 
 ## Title: DoYouNeedThat?
 ## Author: Kraffs <Numinous-TarrenMill LootCouncil-TarrenMill>
-## Version: 1.2.6
+## Version: 1.2.7
 ## Notes: Pesters people for loot because Personal Loot is fun! (Kirri mod)
 ## OptionalDeps: CanIMogIt
 ## SavedVariables: DyntDB
@@ -14,3 +14,10 @@
 ## X-Feedback: https://github.com/Kirri777/DoYouNeedThat/issues
 
 DoYouNeedThat.xml
+
+# Libs version
+# LibStub-1.0 - v1.0.2, 2016-08-18
+# CallbackHandler-1.0 - v1.0.9, 2022-12-12
+# LibInspect - v0.3.7, 2020-11-19
+# LibDataBroker-1.1 - v1.1.4, 2009-07-22
+# LibDBIcon-1.0 - v11.0.0, 2024-08-02
