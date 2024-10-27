@@ -204,6 +204,20 @@ function AddOn:checkOther(itemLink, looter)
         self.Debug("playerKnowsPet: true")
         return
     end
+
+    -- Check if the item is a cosmetics and if the player knows it
+    if CanIMogIt and AddOn:isCosmetic(itemLink) then
+        self.Debug("isCosmetic: true")
+
+        if not CanIMogIt:PlayerKnowsTransmog(itemLink) then
+            self.Debug("playerKnowsCosmetic: false")
+            -- Add the item to the loot table with a specific level for cosmetics
+            return AddOn:addItem(itemLink, looter, 6666, '')
+        end
+
+        self.Debug("playerKnowsCosmetic: true")
+        return
+    end
 end
 
 --[[
@@ -392,6 +406,27 @@ function AddOn:playerKnowsPet(itemLink)
 
     -- Check if the pet is collected by the player
     return C_PetJournal.GetNumCollectedInfo(speciesID) > 0
+end
+
+
+--[[
+    Determines if the given item link is cosmetic.
+
+    @param itemLink string: The item link to check.
+
+    @return boolean: True if the item is cosmetic, false otherwise.
+]]
+function AddOn:isCosmetic(itemLink)
+    -- Retrieve the item subclass using the item link
+    local itemSubClass = select(3, C_Item.GetItemInfoInstant(itemLink))
+
+    if itemSubClass == nil then
+        -- If the subclass could not be determined, return false
+        return false
+    end
+
+    -- Check if the item subclass is cosmetic
+    return select(1, C_Item.GetItemSubClassInfo(4, 5)) == itemSubClass
 end
 
 --[[
@@ -1163,6 +1198,7 @@ local function SlashCommandHandler(msg)
             local itemLink = item:GetItemLink()
             local itemLevel = item:GetCurrentItemLevel()
             local _, _, rarity, _, _, type, _, _, equipLoc, _, _, itemClass, itemSubClass = GetItemInfo(itemLink)
+            AddOn.Debug("Item type: " .. type)
             
             -- If not Armor/Weapon
             if (type ~= ARMOR and type ~= AUCTION_CATEGORY_ARMOR and type ~= WEAPON) then
