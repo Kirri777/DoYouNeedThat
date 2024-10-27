@@ -828,6 +828,9 @@ function AddOn:ClearEntries()
             self.Entries[i].looter = nil
             self.Entries[i].guid = nil
             self.Entries[i].itemID = nil
+            self.Entries[i].ilvl:SetText("0")
+            self.Entries[i].itemLink = nil
+            self.Entries[i].looter = nil
         end
     end
 end
@@ -1159,7 +1162,7 @@ local function SlashCommandHandler(msg)
         item:ContinueOnItemLoad(function()
             local itemLink = item:GetItemLink()
             local itemLevel = item:GetCurrentItemLevel()
-            local _, _, rarity, _, _, _, _, _, equipLoc, _, _, itemClass, itemSubClass = GetItemInfo(itemLink)
+            local _, _, rarity, _, _, type, _, _, equipLoc, _, _, itemClass, itemSubClass = GetItemInfo(itemLink)
             
             -- If not Armor/Weapon
             if (type ~= ARMOR and type ~= AUCTION_CATEGORY_ARMOR and type ~= WEAPON) then

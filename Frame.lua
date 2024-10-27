@@ -105,21 +105,43 @@ end
 
 function AddOn:repositionFrames()
     local lastentry = nil
+    local sortByIlvl = {}
 
-    -- sort by ilvl
     tsort(AddOn.Entries, function(a, b)
-        return tonumber(a.ilvl:GetText()) > tonumber(b.ilvl:GetText())
+        -- sort by ilvl
+        local ailvl, bilvl = tonumber(a.ilvl:GetText()), tonumber(b.ilvl:GetText())
+        return ailvl > bilvl
     end)
-
+    
     for i = 1, #AddOn.Entries do
-        local currententry = AddOn.Entries[i]
-        if currententry.itemLink then
-            if lastentry then
-                currententry:SetPoint("TOPLEFT", lastentry, "BOTTOMLEFT", 0, 1)
-            else
-                currententry:SetPoint("TOPLEFT", AddOn.lootFrame.table.content, "TOPLEFT", 0, 1)
+        local ilvl = tonumber(AddOn.Entries[i].ilvl:GetText())
+
+        if ilvl ~= nil and ilvl > 0 then
+            if sortByIlvl[ilvl] == nil then
+                sortByIlvl[ilvl] = {}
             end
-            lastentry = currententry
+
+            table.insert(sortByIlvl[ilvl], AddOn.Entries[i])
+        end
+    end
+
+    for _, entries in pairs(sortByIlvl) do
+        tsort(entries, function(a, b)
+            local aitemID, bitemID = tonumber(a.itemID), tonumber(b.itemID)
+            return aitemID > bitemID
+        end)
+        
+        for i = 1, #entries do
+            local currententry = entries[i]
+
+            if currententry.itemLink then
+                if lastentry then
+                    currententry:SetPoint("TOPLEFT", lastentry, "BOTTOMLEFT", 0, 1)
+                else
+                    currententry:SetPoint("TOPLEFT", AddOn.lootFrame.table.content, "TOPLEFT", 0, 1)
+                end
+                lastentry = currententry
+            end
         end
     end
 end
@@ -326,6 +348,10 @@ function AddOn.createLootFrame()
         skinBackdrop(entry, 1, 1, 1, .1)
         entry:Hide()
 
+        entry.itemLink = nil
+        entry.itemID = nil
+        entry.looter = nil
+
         ---@type table|BackdropTemplate|Frame
         entry.item = CreateFrame("Button", nil, entry, "BackdropTemplate")
         entry.item:SetSize(20, 20)
@@ -402,9 +428,14 @@ function AddOn.createLootFrame()
         entry.delete:SetText("x")
         skinButton(entry.delete, true, "red")
         entry.delete:SetScript("OnClick", function()
+            entry:Hide()
             entry.itemLink = nil
             entry.looter = nil
-            entry:Hide()
+            entry.guid = nil
+            entry.ilvl:SetText("0")
+            entry.itemID = nil
+            entry.looter = nil
+            
             -- Re order
             AddOn:repositionFrames()
         end)
