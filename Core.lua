@@ -105,8 +105,12 @@ function AddOn:getItemLinkFromChat(message)
     return link
 end
 
-function AddOn:kirriGetItemID(itemLink)
+function AddOn:getItemID(itemLink)
     return tonumber(itemLink:match("item:(%d+)"))
+end
+
+function AddOn:getPetID(itemLink)
+    return tonumber(itemLink:match("battlepet:(%d+)"))
 end
 
 -- Events: CHAT_MSG_LOOT, BOSS_KILL
@@ -120,6 +124,11 @@ function AddOn:CHAT_MSG_LOOT(...)
         return
     end
 
+    -- Check to see if it's a pet cage
+    if string.find(messageItemLink, "battlepet:") then
+        return AddOn:checkOther(messageItemLink, looter)
+    end
+
     local item = Item:CreateFromItemLink(messageItemLink)
     item:ContinueOnItemLoad(function()
         local itemLink = item:GetItemLink()
@@ -129,7 +138,7 @@ function AddOn:CHAT_MSG_LOOT(...)
         -- If not Armor/Weapon
         if (type ~= ARMOR and type ~= AUCTION_CATEGORY_ARMOR and type ~= WEAPON) then
             self.Debug("Armor/Weapon: false")
-            return
+            return AddOn:checkOther(itemLink, looter)
         end
 
         local check, mog = self:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass, itemLevel)
@@ -139,18 +148,267 @@ function AddOn:CHAT_MSG_LOOT(...)
             return
         end
 
-        -- self.Debug(itemLink .. " " .. itemLevel)
-
-        if not sfind(looter, '-') then
-            looter = self.Utils.GetUnitNameWithRealm(looter)
-        end
-
-        local t = { itemLink, looter, itemLevel, mog }
-        self:AddItemToLootTable(t)
+        AddOn:addItem(itemLink, looter, itemLevel, mog)
     end)
 end
 
+--[[
+    Checks if the item is a mount, toy, or pet, and adds it to the loot table if the player knows it.
+
+    @param itemLink string: The item link to check.
+    @param looter string: The name of the looter.
+
+    @return void
+]]
+function AddOn:checkOther(itemLink, looter)
+    self.Debug("checkOther")
+
+    -- Check if the item is a mount and if the player knows it
+    if self.db.config.checkMounts and AddOn:isItemMount(itemLink) then
+        self.Debug("isItemMount: true")
+
+        if not AddOn:playerKnowsMount(itemLink) then
+            self.Debug("playerKnowsMount: false")
+            -- Add the item to the loot table with a specific level for mounts
+            return AddOn:addItem(itemLink, looter, 9999, '')
+        end
+
+        self.Debug("playerKnowsMount: true")
+        return
+    end
+
+    -- Check if the item is a toy and if the player knows it
+    if self.db.config.checkToys and AddOn:isItemToy(itemLink) then
+        self.Debug("isItemToy: true")
+
+        if not AddOn:playerKnowsToy(itemLink) then
+            self.Debug("playerKnowsToy: false")
+            -- Add the item to the loot table with a specific level for toys
+            return AddOn:addItem(itemLink, looter, 8888, '')
+        end
+
+        self.Debug("playerKnowsToy: true")
+        return
+    end
+
+    -- Check if the item is a pet and if the player knows it
+    if self.db.config.checkPets and AddOn:isItemPet(itemLink) then
+        self.Debug("isItemPet: true")
+
+        if not AddOn:playerKnowsPet(itemLink) then
+            self.Debug("playerKnowsPet: false")
+            -- Add the item to the loot table with a specific level for pets
+            return AddOn:addItem(itemLink, looter, 7777, '')
+        end
+
+        self.Debug("playerKnowsPet: true")
+        return
+    end
+end
+
+--[[
+    Adds an item to the loot table
+
+    @param itemLink string: The item link to add
+    @param looter string: The name of the looter
+    @param itemLevel number: The level of the item
+    @param mog string: The mog icon
+
+    @return void
+--]]
+function AddOn:addItem(itemLink, looter, itemLevel, mog)
+    self.Debug("addItem")
+
+    -- If the looter is a player and not a player-server pair, add the server
+    if not sfind(looter, '-') then
+        looter = self.Utils.GetUnitNameWithRealm(looter)
+    end
+
+    -- Create a table with the item data
+    local t = { itemLink, looter, itemLevel, mog }
+
+    -- Add the item to the loot table
+    self:AddItemToLootTable(t)
+end
+
+--[[
+    Checks if an item is a mount or not
+    
+    @param itemLink string: The item link to check
+
+    @return boolean: True if the item is a mount, false otherwise
+--]]
+function AddOn:isItemMount(itemLink)
+    -- Retrieve the item ID from the item link
+    local itemID = AddOn:getItemID(itemLink)
+
+    -- Return false if the item ID could not be determined
+    if itemID == nil then
+        return false
+    end
+
+    -- Use the Mount Journal API to check if the item is a mount
+    if C_MountJournal.GetMountFromItem(itemID) then
+        return true
+    end
+
+    -- Return false if the item is not a mount
+    return false
+end
+
+--[[
+    Determines if the player knows the mount associated with the given item ID.
+
+    @param itemLink string: The item link to check
+
+    @return boolean: True if the player knows the mount, false otherwise.
+]]
+function AddOn:playerKnowsMount(itemLink)
+    -- Retrieve the item ID from the item link
+    local itemID = AddOn:getItemID(itemLink)
+
+    -- Return false if the item ID could not be determined
+    if itemID == nil then
+        return false
+    end
+
+    -- Get the mount ID from the item ID using the Mount Journal API
+    local mountID = C_MountJournal.GetMountFromItem(itemID)
+
+    -- If no mount ID is found, the player does not know the mount
+    if mountID == nil then
+        return false
+    end
+
+    -- Retrieve mount information using the mount ID and check if it's known by the player
+    return select(11, C_MountJournal.GetMountInfoByID(mountID))
+end
+
+--[[
+    Checks if an item is a toy or not
+
+    @param itemLink string: The item link to check
+
+    @return boolean: True if the item is a toy, false otherwise
+--]]
+function AddOn:isItemToy(itemLink)
+    -- Retrieve the item ID from the item link
+    local itemID = AddOn:getItemID(itemLink)
+
+    -- Return false if the item ID could not be determined
+    if itemID == nil then
+        return false
+    end
+
+    -- Check if the item is a toy using the Toy Box API
+    if C_ToyBox.GetToyInfo(itemID) then
+        return true
+    end
+
+    -- If no toy info is found, the item is not a toy
+    return false
+end
+
+--[[
+    Determines if the player knows the toy associated with the given item ID.
+
+    @param itemLink string: The item link to check.
+
+    @return boolean: True if the player knows the toy, false otherwise.
+--]]
+function AddOn:playerKnowsToy(itemLink)
+    -- Retrieve the item ID from the item link
+    local itemID = AddOn:getItemID(itemLink)
+
+    -- Return false if the item ID could not be determined
+    if itemID == nil then
+        return false
+    end
+
+    -- Use the PlayerHasToy API to check if the player knows the toy
+    return PlayerHasToy(itemID)
+end
+
+--[[
+    Checks if an item is a pet or not
+
+    @param itemLink string: The item link to check.
+
+    @return boolean: True if the item is a pet, false otherwise
+--]]
+function AddOn:isItemPet(itemLink)
+    -- Retrieve the item ID from the item link
+    local itemID = AddOn:getItemID(itemLink)
+
+    -- If itemID is not provided, check if the itemLink is a pet cage
+    if itemID == nil then
+        -- Check to see if it's a pet cage
+        if string.find(itemLink, "battlepet:") then
+            return true
+        end
+
+        -- If it's not a pet cage, it's not a pet
+        return false
+    end
+
+    -- If itemID is provided, check if the item is a pet using the Pet Journal API
+    if C_PetJournal.GetPetInfoByItemID(itemID) then
+        return true
+    end
+
+    -- If we reach this point, the item is not a pet
+    return false
+end
+
+--[[
+    Determines if the player knows the pet associated with the given item ID or item link.
+
+    @param itemLink string: The item link to check.
+
+    @return boolean: True if the player knows the pet, false otherwise.
+]]
+function AddOn:playerKnowsPet(itemLink)
+    local speciesID = nil
+
+    -- Retrieve the item ID from the item link
+    local itemID = AddOn:getItemID(itemLink)
+
+    if itemID ~= nil then
+        -- Get species ID from the item ID using the Pet Journal API
+        speciesID = select(13, C_PetJournal.GetPetInfoByItemID(itemID))
+    else
+        -- Extract species ID from the item link if item ID is not provided
+        _, _, speciesID = string.find(itemLink, "battlepet:(%d+)")
+
+        if speciesID ~= nil then
+            speciesID = tonumber(speciesID)
+        end
+    end
+
+    -- Return false if speciesID could not be determined
+    if speciesID == nil then
+        return false
+    end
+
+    -- Check if the pet is collected by the player
+    return C_PetJournal.GetNumCollectedInfo(speciesID) > 0
+end
+
+--[[
+    Checks if an item is transmogable or upgrade currently equipped.
+
+    @param itemLink string: The item link to check.
+    @param rarity number: The rarity of the item.
+    @param equipLoc string: The equip location of the item.
+    @param itemClass number: The class of the item.
+    @param itemSubClass number: The subclass of the item.
+    @param iLvl number: The item level of the item.
+
+    @return boolean: True if the item is transmogable and the player does not know the transmog, but another character knows it.
+    @return string: The icon to use for the item.
+--]]
 function AddOn:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass, iLvl)
+    -- Check if the item is transmogable
     local checkmog, mog = self:checkAddItemTransmog(itemLink)
 
     if checkmog then
@@ -158,12 +416,13 @@ function AddOn:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass,
         return true, mog
     end
 
+    -- Check if the item is equippable
     if not IsEquippableItem(itemLink) then
         self.Debug("IsEquippableItem: false")
         return false, mog
     end
 
-    -- If its a Legendary or under rare quality
+    -- If its a Legendary or under rare quality, do not add it
     if rarity == 5 or rarity < 3 then
         self.Debug("rarity == 5 or rarity < 3: false")
         return false, mog
@@ -181,6 +440,7 @@ function AddOn:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass,
         return false, mog
     end
 
+    -- Check if the item is an upgrade
     if not self:IsItemUpgrade(iLvl, equipLoc) then
         self.Debug("IsItemUpgrade: false")
         return false, mog
@@ -200,10 +460,10 @@ end
     if the user has enabled the option to check the source of the transmog.
     If the player does not know the transmog and no other character knows it, it will return true and an unknown icon.
 
-    @param itemLink The link to the item to be checked.
+    @param itemLink string: The link to the item to be checked.
 
-    @return checkTransmogable (bool) Whether the item is transmogable.
-    @return mog (string) The icon to be used to represent the state of the item.
+    @return boolean: Whether the item is transmogable.
+    @return string: The icon to be used to represent the state of the item.
 --]]
 function AddOn:checkAddItemTransmog(itemLink)
     local mog = '|TInterface\\AddOns\\CanIMogIt\\Icons\\not_transmogable:0|t'
@@ -262,8 +522,8 @@ end
     @see https://wowpedia.fandom.com/wiki/DifficultyID
     @see https://wowpedia.fandom.com/wiki/BOSS_KILL
 
-    @param encounterID The encounter ID of the boss that was killed.
-    @param encounterName The name of the boss that was killed.
+    @param encounterID number: The encounter ID of the boss that was killed.
+    @param encounterName string: The name of the boss that was killed.
 
     @return void
 --]]
@@ -321,8 +581,9 @@ end
 --[[
     Checks if the given encounter ID corresponds to a last boss in a Mythic+ dungeon.
 
-    @param encounterId The encounter ID to check.
-    @return True if the encounter ID is a last boss in a Mythic+ dungeon, false otherwise.
+    @param encounterId number: The encounter ID to check.
+
+    @return boolean: True if the encounter ID is a last boss in a Mythic+ dungeon, false otherwise.
 --]]
 function AddOn:isLastBossMythicPlus(encounterId)
     -- Convert the encounter ID to a number
@@ -438,6 +699,9 @@ function AddOn:ADDON_LOADED(addon)
                 debug = false,
                 checkTransmogable = true,
                 checkTransmogableSource = true,
+                checkMounts = true,
+                checkToys = true,
+                checkPets = true,
                 chatShowLootFrame = 'disabled',
                 minDelta = 0,
             },
@@ -457,6 +721,21 @@ function AddOn:ADDON_LOADED(addon)
     -- Set chatShowLootFrameEverywhere default if its not a fresh install
     if not self.db.config.chatShowLootFrame then
         self.db.config.chatShowLootFrame = 'disabled'
+    end
+
+    -- Set checkMounts default if its not a fresh install
+    if not self.db.config.checkMounts then
+        self.db.config.checkMounts = false
+    end
+
+    -- Set checkToys default if its not a fresh install
+    if not self.db.config.checkToys then
+        self.db.config.checkToys = false
+    end
+
+    -- Set checkPets default if its not a fresh install
+    if not self.db.config.checkPets then
+        self.db.config.checkPets = false
     end
 
     self.createLootFrame()
@@ -549,6 +828,9 @@ function AddOn:ClearEntries()
             self.Entries[i].looter = nil
             self.Entries[i].guid = nil
             self.Entries[i].itemID = nil
+            self.Entries[i].ilvl:SetText("0")
+            self.Entries[i].itemLink = nil
+            self.Entries[i].looter = nil
         end
     end
 end
@@ -608,7 +890,7 @@ function AddOn:AddItemToLootTable(t)
     entry.name:SetTextColor(classColor.r, classColor.g, classColor.b)
     self.setItemTooltip(entry.item, t[1])
     entry.ilvl:SetText(t[3])
-    entry.itemID = self:kirriGetItemID(t[1])
+    entry.itemID = self:getItemID(t[1])
 
     if self.db.config.checkTransmogable and CanIMogIt then
         entry.mog:SetText(t[4])
@@ -624,7 +906,7 @@ function AddOn:ShowLootFrameFromChat()
     self.Debug("ShowLootFrame")
 
     -- check is opened
-    if self.db.lootWindowOpen or self.Config.chatShowLootFrame == "disabled" then
+    if self.db.lootWindowOpen or self.db.config.chatShowLootFrame == "disabled" then
         return
     end
 
@@ -633,7 +915,7 @@ function AddOn:ShowLootFrameFromChat()
         return
     end
 
-    if self.Config.chatShowLootFrame == "everywhere" then
+    if self.db.config.chatShowLootFrame == "everywhere" then
         self.lootFrame:Show()
         self.db.lootWindowOpen = true
         return
@@ -863,20 +1145,31 @@ local function SlashCommandHandler(msg)
     elseif cmd == "check" and args ~= "" then
         local itemID = AddOn:getNumber(args)
         local item
+        local player = UnitName("player")
+        LibInspect:RequestData("items", "player", false)
 
         if itemID then
             item = Item:CreateFromItemID(itemID)
         else
+            -- Check to see if it's a pet cage
+            if string.find(args, "battlepet:") then
+                return AddOn:checkOther(args, player)
+            end
+
             item = Item:CreateFromItemLink(args)
         end
 
         item:ContinueOnItemLoad(function()
-            local player = UnitName("player")
-            LibInspect:RequestData("items", "player", false)
-
             local itemLink = item:GetItemLink()
             local itemLevel = item:GetCurrentItemLevel()
-            local _, _, rarity, _, _, _, _, _, equipLoc, _, _, itemClass, itemSubClass = GetItemInfo(itemLink)
+            local _, _, rarity, _, _, type, _, _, equipLoc, _, _, itemClass, itemSubClass = GetItemInfo(itemLink)
+            
+            -- If not Armor/Weapon
+            if (type ~= ARMOR and type ~= AUCTION_CATEGORY_ARMOR and type ~= WEAPON) then
+                AddOn.Debug("Armor/Weapon: false")
+                return AddOn:checkOther(itemLink, player)
+            end
+
             local _, mog = AddOn:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass, itemLevel)
             local t = { itemLink, player, itemLevel, mog }
             AddOn:AddItemToLootTable(t)

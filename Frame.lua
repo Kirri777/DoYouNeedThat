@@ -105,21 +105,43 @@ end
 
 function AddOn:repositionFrames()
     local lastentry = nil
+    local sortByIlvl = {}
 
-    -- sort by ilvl
     tsort(AddOn.Entries, function(a, b)
-        return tonumber(a.ilvl:GetText()) > tonumber(b.ilvl:GetText())
+        -- sort by ilvl
+        local ailvl, bilvl = tonumber(a.ilvl:GetText()), tonumber(b.ilvl:GetText())
+        return ailvl > bilvl
     end)
-
+    
     for i = 1, #AddOn.Entries do
-        local currententry = AddOn.Entries[i]
-        if currententry.itemLink then
-            if lastentry then
-                currententry:SetPoint("TOPLEFT", lastentry, "BOTTOMLEFT", 0, 1)
-            else
-                currententry:SetPoint("TOPLEFT", AddOn.lootFrame.table.content, "TOPLEFT", 0, 1)
+        local ilvl = tonumber(AddOn.Entries[i].ilvl:GetText())
+
+        if ilvl ~= nil and ilvl > 0 then
+            if sortByIlvl[ilvl] == nil then
+                sortByIlvl[ilvl] = {}
             end
-            lastentry = currententry
+
+            table.insert(sortByIlvl[ilvl], AddOn.Entries[i])
+        end
+    end
+
+    for _, entries in pairs(sortByIlvl) do
+        tsort(entries, function(a, b)
+            local aitemID, bitemID = tonumber(a.itemID), tonumber(b.itemID)
+            return aitemID > bitemID
+        end)
+        
+        for i = 1, #entries do
+            local currententry = entries[i]
+
+            if currententry.itemLink then
+                if lastentry then
+                    currententry:SetPoint("TOPLEFT", lastentry, "BOTTOMLEFT", 0, 1)
+                else
+                    currententry:SetPoint("TOPLEFT", AddOn.lootFrame.table.content, "TOPLEFT", 0, 1)
+                end
+                lastentry = currententry
+            end
         end
     end
 end
@@ -326,6 +348,10 @@ function AddOn.createLootFrame()
         skinBackdrop(entry, 1, 1, 1, .1)
         entry:Hide()
 
+        entry.itemLink = nil
+        entry.itemID = nil
+        entry.looter = nil
+
         ---@type table|BackdropTemplate|Frame
         entry.item = CreateFrame("Button", nil, entry, "BackdropTemplate")
         entry.item:SetSize(20, 20)
@@ -402,9 +428,14 @@ function AddOn.createLootFrame()
         entry.delete:SetText("x")
         skinButton(entry.delete, true, "red")
         entry.delete:SetScript("OnClick", function()
+            entry:Hide()
             entry.itemLink = nil
             entry.looter = nil
-            entry:Hide()
+            entry.guid = nil
+            entry.ilvl:SetText("0")
+            entry.itemID = nil
+            entry.looter = nil
+            
             -- Re order
             AddOn:repositionFrames()
         end)
@@ -478,10 +509,43 @@ function AddOn.createOptionsFrame()
         AddOn.db.config.checkTransmogableSource = self:GetChecked()
     end)
 
+    -- Check mounts
+    ---@type table|BackdropTemplate|CheckButton
+    options.checkMounts = CreateFrame("CheckButton", "DYNT_Options_CheckMounts", options,
+        "ChatConfigCheckButtonTemplate")
+    options.checkMounts:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -140)
+    getglobal(options.checkMounts:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_MOUNTS"]);
+    if AddOn.Config.checkMounts then options.checkMounts:SetChecked(true) end
+    options.checkMounts:SetScript("OnClick", function(self)
+        AddOn.db.config.checkMounts = self:GetChecked()
+    end)
+
+    -- Check toys
+    ---@type table|BackdropTemplate|CheckButton
+    options.checkToys = CreateFrame("CheckButton", "DYNT_Options_CheckToys", options,
+        "ChatConfigCheckButtonTemplate")
+    options.checkToys:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -170)
+    getglobal(options.checkToys:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_TOYS"]);
+    if AddOn.Config.checkToys then options.checkToys:SetChecked(true) end
+    options.checkToys:SetScript("OnClick", function(self)
+        AddOn.db.config.checkToys = self:GetChecked()
+    end)
+
+    -- Check pets
+    ---@type table|BackdropTemplate|CheckButton
+    options.checkPets = CreateFrame("CheckButton", "DYNT_Options_CheckPets", options,
+        "ChatConfigCheckButtonTemplate")
+    options.checkPets:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -200)
+    getglobal(options.checkPets:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_PETS"]);
+    if AddOn.Config.checkPets then options.checkPets:SetChecked(true) end
+    options.checkPets:SetScript("OnClick", function(self)
+        AddOn.db.config.checkPets = self:GetChecked()
+    end)
+
     -- Hide minimap button
     ---@type table|BackdropTemplate|CheckButton
     options.hideMinimap = CreateFrame("CheckButton", "DYNT_Options_HideMinimap", options, "ChatConfigCheckButtonTemplate")
-    options.hideMinimap:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -140)
+    options.hideMinimap:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -230)
     -- DYNT_Options_HideMinimapText:SetText(L["Hide minimap button"])
     getglobal(options.hideMinimap:GetName() .. 'Text'):SetText(L["Hide minimap button"]);
     if AddOn.db.minimap.hide then options.hideMinimap:SetChecked(true) end
@@ -502,7 +566,7 @@ function AddOn.createOptionsFrame()
     }
 
 	options.chatShowLootFrame = CreateFrame("Frame", "DYNT_Options_ChatShowLootFrame", options, "UIDropDownMenuTemplate")
-	options.chatShowLootFrame:SetPoint("TOPLEFT", options, "TOPLEFT", 3, -180)
+	options.chatShowLootFrame:SetPoint("TOPLEFT", options, "TOPLEFT", 3, -270)
 	-- options.chatShowLootFrame:SetWidth(150)
     UIDropDownMenu_SetWidth(options.chatShowLootFrame, 150)
     getglobal(options.chatShowLootFrame:GetName() .. 'Text'):SetText(chatshowlootframe_options[AddOn.db.config.chatShowLootFrame]);
@@ -533,7 +597,7 @@ function AddOn.createOptionsFrame()
     ---@type table|BackdropTemplate|EditBox
     options.whisperMessage = CreateFrame("EditBox", "DYNT_Options_WhisperMessage", options, "InputBoxTemplate")
     options.whisperMessage:SetSize(200, 32)
-    options.whisperMessage:SetPoint("TOPLEFT", options, "TOPLEFT", 28, -230)
+    options.whisperMessage:SetPoint("TOPLEFT", options, "TOPLEFT", 28, -320)
     options.whisperMessage:SetAutoFocus(false)
     options.whisperMessage:SetMaxLetters(128)
     AddOn.Debug(AddOn.Config.whisperMessage)
@@ -558,7 +622,7 @@ function AddOn.createOptionsFrame()
     options.minDelta = CreateFrame("Slider", "DYNT_Options_MinDelta", options, "OptionsSliderTemplate")
     options.minDelta:SetWidth(300)
     options.minDelta:SetHeight(20)
-    options.minDelta:SetPoint("TOPLEFT", 28, -300)
+    options.minDelta:SetPoint("TOPLEFT", 28, -390)
     options.minDelta:SetOrientation("HORIZONTAL")
     options.minDelta:SetMinMaxValues(0, 100)
     options.minDelta:SetValue(AddOn.Config.minDelta)
