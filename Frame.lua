@@ -106,6 +106,7 @@ end
 function AddOn:repositionFrames()
     local lastentry = nil
     local sortByIlvl = {}
+    local ilvls = {}
 
     tsort(AddOn.Entries, function(a, b)
         -- sort by ilvl
@@ -119,13 +120,20 @@ function AddOn:repositionFrames()
         if ilvl ~= nil and ilvl > 0 then
             if sortByIlvl[ilvl] == nil then
                 sortByIlvl[ilvl] = {}
+                table.insert(ilvls, ilvl)
             end
 
             table.insert(sortByIlvl[ilvl], AddOn.Entries[i])
         end
     end
 
-    for _, entries in pairs(sortByIlvl) do
+    tsort(ilvls, function(a, b)
+        return a > b
+    end)
+
+    for _, ilvl in pairs(ilvls) do
+        local entries = sortByIlvl[ilvl]
+
         tsort(entries, function(a, b)
             local aitemID, bitemID = tonumber(a.itemID), tonumber(b.itemID)
             return aitemID > bitemID
