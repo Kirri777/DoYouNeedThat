@@ -18,6 +18,7 @@ local CanIMogIt = _G['CanIMogIt'] or false
 local L = AddOn.L
 -- local LibItemLevel = LibStub("LibItemLevel")
 local LibInspect = LibStub("LibInspect")
+LibInspect:SetRescan(14)
 local _, playerClass, playerClassId = UnitClass("player")
 local icon = LibStub("LibDBIcon-1.0")
 local LDB = LibStub("LibDataBroker-1.1"):NewDataObject("DoYouNeedThat", {
