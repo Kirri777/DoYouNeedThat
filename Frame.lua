@@ -230,19 +230,6 @@ function AddOn.createLootFrame()
     AddOn.lootFrame.header.minimize:SetPoint("RIGHT", AddOn.lootFrame.header, "RIGHT", -30, 0)
     AddOn.lootFrame.header.minimize:SetText("-")
     skinButton(AddOn.lootFrame.header.minimize, true, "lightgrey")
-    AddOn.lootFrame.header.minimize:SetScript("OnClick", function(self)
-        if minimized then
-            AddOn.lootFrame:SetSize(380, 200)
-            AddOn.lootFrame.table:Show()
-            self:SetText("-")
-            minimized = false
-        else
-            AddOn.lootFrame:SetSize(380, 24)
-            AddOn.lootFrame.table:Hide()
-            self:SetText("+")
-            minimized = true
-        end
-    end)
 
     ---@type table|BackdropTemplate|Button
     AddOn.lootFrame.header.close = CreateFrame("Button", nil, AddOn.lootFrame.header, "BackdropTemplate")
@@ -288,7 +275,7 @@ function AddOn.createLootFrame()
 
     ---@type Frame
     loot_table.content = CreateFrame("Frame", nil, scrollframe)
-    loot_table.content:SetSize(340, 140)
+    -- loot_table.content:SetSize(340, 140)
     scrollframe:SetScrollChild(loot_table.content)
 
 
@@ -316,32 +303,44 @@ function AddOn.createLootFrame()
     -- print(AddOn.Config)
     -- print(CanIMogIt)
 
+    local content_size = 340
+    local lootFrame_size = 380
+
     if AddOn.db.config.checkTransmogable and CanIMogIt then
         loot_table.canimogit_text = loot_table:CreateFontString(nil, "OVERLAY", "dynt_button")
         loot_table.canimogit_text:SetText(L["CanIMogIt"])
         loot_table.canimogit_text:SetTextColor(1, 1, 1)
         loot_table.canimogit_text:SetPoint("TOPLEFT", loot_table, "TOPLEFT", 90, 16)
 
-        loot_table.content:SetSize(380, 140)
+        -- loot_table.content:SetSize(380, 140)
         loot_table.name_text:SetPoint("TOPLEFT", loot_table, "TOPLEFT", 130, 16)
         loot_table.equipped_text:SetPoint("TOPLEFT", loot_table, "TOPLEFT", 215, 16)
 
-        AddOn.lootFrame.header.minimize:SetScript("OnClick", function(self)
-            if minimized then
-                AddOn.lootFrame:SetSize(420, 200)
-                AddOn.lootFrame.table:Show()
-                self:SetText("-")
-                minimized = false
-            else
-                AddOn.lootFrame:SetSize(420, 24)
-                AddOn.lootFrame.table:Hide()
-                self:SetText("+")
-                minimized = true
-            end
-        end)
-
-        AddOn.lootFrame:SetSize(420, 200)
+        content_size = content_size + 40
+        lootFrame_size = lootFrame_size + 40
     end
+
+    if AddOn.db.config.checkCustomTexts and next(AddOn.db.config.customTexts) then
+        content_size = content_size + 40
+        lootFrame_size = lootFrame_size + 40
+    end
+    
+    AddOn.lootFrame:SetSize(lootFrame_size, 200)
+    loot_table.content:SetSize(content_size, 140)
+
+    AddOn.lootFrame.header.minimize:SetScript("OnClick", function(self)
+        if minimized then
+            AddOn.lootFrame:SetSize(lootFrame_size, 200)
+            AddOn.lootFrame.table:Show()
+            self:SetText("-")
+            minimized = false
+        else
+            AddOn.lootFrame:SetSize(lootFrame_size, 24)
+            AddOn.lootFrame.table:Hide()
+            self:SetText("+")
+            minimized = true
+        end
+    end)
 
     local lastframe = nil
     for i = 1, 20 do
@@ -457,6 +456,40 @@ function AddOn.createLootFrame()
             entry.name:SetPoint("LEFT", entry, "LEFT", 130, 0)
             entry.looterEq1:SetPoint("LEFT", entry, "LEFT", 221, 0)
             entry.looterEq2:SetPoint("LEFT", entry, "LEFT", 243, 0)
+        end
+
+        if AddOn.db.config.checkCustomTexts and next(AddOn.db.config.customTexts) then
+            entry.whisper:SetPoint("RIGHT", entry, "RIGHT", -60, 0)
+            
+            ---@type table|BackdropTemplate|Button
+            entry.customTextButton = CreateFrame("Button", "DYNT_Entry_CustomTextButton" .. i, entry, "BackdropTemplate")
+            entry.customTextButton:SetPoint("RIGHT", entry, "RIGHT", -30, 0)
+            entry.customTextButton:SetText("|TInterface\\Buttons\\Arrow-Down-Down:10:10:0:-3|t")
+            entry.customTextButton:SetSize(20, 20)
+            skinButton(entry.customTextButton, true, "black")
+
+            entry.customTextMenu = CreateFrame("Frame", "DYNT_Entry_CustomTextMenu" .. i, entry, "UIDropDownMenuTemplate")
+            UIDropDownMenu_SetWidth(entry.customTextMenu, 100)
+            UIDropDownMenu_Initialize(entry.customTextMenu, (function()
+                local info = {}
+
+                for key, value in pairs(AddOn.db.config.customTexts) do
+                    info.text = value
+                    info.value = key
+                    info.func = function(self)
+                        AddOn:sendCustomWhisperToLooter(self.value, entry.itemLink, entry.looter)
+                        -- print(self.value .. " " .. entry.itemLink .. " " .. entry.looter)
+                        entry.whisper:Hide()
+                        entry.customTextButton:Hide()
+                    end
+                    UIDropDownMenu_AddButton(info)
+                end
+            end), "MENU")
+
+            entry.customTextButton:SetScript("OnClick", function(self)
+                ToggleDropDownMenu(1, nil, entry.customTextMenu, self, 0, 0)
+            end)
+            entry.customTextButton:Hide()
         end
 
         lastframe = entry
@@ -656,6 +689,20 @@ function AddOn.createOptionsFrame()
     options.minDelta.labelText:SetShadowOffset(1, -1)
     options.minDelta.labelText:SetText(L["Minimum itemlevels lower"])
 
+    -- Check custom texts
+    ---@type table|BackdropTemplate|CheckButton
+    options.checkCustomTexts = CreateFrame("CheckButton", "DYNT_Options_CheckCustomTexts", options,
+        "ChatConfigCheckButtonTemplate")
+    options.checkCustomTexts:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -430)
+    getglobal(options.checkCustomTexts:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_CUSTOM_TEXTS"]);
+    if AddOn.Config.checkCustomTexts then options.checkCustomTexts:SetChecked(true) end
+    options.checkCustomTexts:SetScript("OnClick", function(self)
+        AddOn.db.config.checkCustomTexts = self:GetChecked()
+        AddOn:recreateLootFrame()
+    end)
+
+    AddOn.createCustomTextInputs(options)
+
     -- Set the field values to their value in SavedVariables.
     function options.refreshFields()
         options.debug:SetChecked(AddOn.Config.debug)
@@ -701,3 +748,137 @@ function AddOn.createOptionsFrame()
         InterfaceOptions_AddCategory(options)
     end
 end
+
+--[[
+    Adds a new custom text input field to the specified frame at the specified index and saves the existing custom text inputs to the db.
+
+    @param index The index of the new custom text input field
+    @param frame The frame on which the custom text inputs are located
+--]]
+function AddOn.addCustomTextInput(index, frame)
+    if not frame.customTextInput then
+        frame.customTextInput = {}
+    end
+
+    local inputFrame = frame.customTextInput[index]
+    local position = -(index * 30 + 430)
+
+    ---@type table|BackdropTemplate|EditBox
+    frame.customTextInput[index] = CreateFrame("EditBox", "DYNT_Options_CustomTextInput_" .. index, frame, "InputBoxTemplate")
+    frame.customTextInput[index]:SetSize(400, 32)
+    frame.customTextInput[index]:SetPoint("TOPLEFT", frame, "TOPLEFT", 50, position)
+    frame.customTextInput[index]:SetAutoFocus(false)
+    frame.customTextInput[index]:SetMaxLetters(128)
+
+    if AddOn.db.config.customTexts[index] then
+        frame.customTextInput[index]:SetText(AddOn.db.config.customTexts[index])
+    end
+
+    frame.customTextInput[index]:SetCursorPosition(0)
+    frame.customTextInput[index]:SetScript("OnEditFocusGained", function() --[[ Override to not highlight the text ]] end)
+    frame.customTextInput[index]:SetScript("OnEditFocusLost", function(self)
+        AddOn.db.config.customTexts[index] = self:GetText()
+        AddOn.saveCustomTextInputs(frame)
+    end)
+    frame.customTextInput[index]:SetScript("OnEnterPressed", function(self)
+        AddOn.db.config.customTexts[index] = self:GetText()
+        AddOn.saveCustomTextInputs(frame)
+    end)
+    
+    local whisperLabel = frame.customTextInput[index]:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
+    whisperLabel:SetPoint("TOPLEFT", frame.customTextInput[index], "TOPLEFT", -25, -10)
+    whisperLabel:SetJustifyH("LEFT")
+    frame.customTextInput[index].labelText = whisperLabel
+    frame.customTextInput[index].labelText:SetTextColor(1, 1, 1)
+    frame.customTextInput[index].labelText:SetShadowColor(0, 0, 0)
+    frame.customTextInput[index].labelText:SetShadowOffset(1, -1)
+    frame.customTextInput[index].labelText:SetText(index .. '.')
+end
+
+--[[
+    Initializes and creates custom text input fields on the specified frame based on the saved configuration.
+
+    This function resets the current custom text inputs and iterates over the saved custom texts in the database,
+    creating an input field for each one. It also adds an additional input field for new entries.
+
+    @param frame The frame on which to create the custom text inputs
+--]]
+local count_custom_text = 0
+
+function AddOn.createCustomTextInputs(frame)
+    -- Initialize the customTextInput table for the frame
+    frame.customTextInput = {}
+    -- Reset the count of custom text inputs
+    count_custom_text = 0
+
+    -- Iterate over the existing custom texts and create input fields
+    for i, _ in pairs(AddOn.db.config.customTexts) do
+        AddOn.addCustomTextInput(i, frame)
+        count_custom_text = count_custom_text + 1
+    end
+
+    -- Add an additional input field for new custom text
+    count_custom_text = count_custom_text + 1
+    AddOn.addCustomTextInput(count_custom_text, frame)
+end
+
+--[[
+    Saves the custom text inputs to the db and recreates them if the "Recreate loot frame on custom text change" option is enabled.
+
+    @param frame The frame on which the custom text inputs are located
+--]]
+function AddOn.saveCustomTextInputs(frame)
+    local index = 1
+    local old_custom_texts = AddOn.db.config.customTexts
+    AddOn.db.config.customTexts = {}
+
+    -- Loop through all custom text inputs and save their text to the db
+    -- if they are not empty
+    for _,text in pairs(old_custom_texts) do
+        if text and text ~= "" then
+            AddOn.db.config.customTexts[index] = text
+            index = index + 1
+        end
+    end
+
+    -- If the "Recreate loot frame on custom text change" option is enabled, recreate the loot frame
+    if AddOn.db.config.checkCustomTexts then
+        AddOn:recreateLootFrame()
+    end
+
+    -- Remove all custom text inputs from the frame and recreate them
+    AddOn.removeCustomTextInputs(frame)
+    AddOn.createCustomTextInputs(frame)
+end
+
+--[[
+    Removes all custom text input fields from the frame
+
+    This function is called when the user changes the number of custom text inputs
+    in the options menu. It removes all the current custom text inputs from the
+    frame and then recreates them according to the new number of custom text
+    inputs set in the options menu.
+
+    @param frame The frame on which the custom text inputs are located
+--]]
+function AddOn.removeCustomTextInputs(frame)
+    for i = 1, count_custom_text do
+        if frame.customTextInput[i] then
+            -- Hide the input field
+            frame.customTextInput[i]:Hide()
+            -- Clear the input field text
+            frame.customTextInput[i]:SetText("")
+            -- Remove the input field from the frame
+            frame.customTextInput[i]:SetParent(nil)
+            -- Remove all anchors from the input field
+            frame.customTextInput[i]:ClearAllPoints()
+            -- Remove all event handlers from the input field
+            frame.customTextInput[i]:UnregisterAllEvents()
+            -- Reset the input field ID
+            frame.customTextInput[i]:SetID(0)
+            -- Reset the input field object
+            frame.customTextInput[i] = nil
+        end
+    end
+end
+
