@@ -24,7 +24,7 @@ L["MINIMAP_ICON_TOOLTIP2"] = "Right-click to open DoYouNeedThat options panel"
 L["OPTIONS_DONT_CHECK_ISITEMUPGRADE"] =
 "Show all items for you (if checked then you can see items below your item Level)"
 L["OPTIONS_SHOW_EVERYWHERE"] = "Show everywhere (not only in instances)"
-L["OPTIONS_CHECK_TRANSMOG"] = "Check if the item is transmoggable (\124cFF8080FFrequires the CanIMogIt addon\124r)"
+L["OPTIONS_CHECK_TRANSMOG"] = "Check if the item is transmoggable (\124cFF8080FFRequires the CanIMogIt addon\124r)"
 L["OPTIONS_CHECK_TRANSMOG_OTHER_SOURCES"] = "Also show items that are learned from other sources (\124cFF8080FFRequires the CanIMogIt addon\124r)"
 L["OPTIONS_CHECK_CHAT_SHOW_LOOT_FRAME"] = "Show the loot frame when a classifiable item drops from any mob (not only bosses)"
 L["CanIMogIt"] = "Mog"
