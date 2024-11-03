@@ -12,6 +12,8 @@ Personal fork of [DoYouNeedThat](https://github.com/kraffslol/DoYouNeedThat)
 
   ![image](https://github.com/user-attachments/assets/7fa2d3bf-25e3-4930-ba04-b2c47169b42b)
 
-- Added option to show the loot frame when a classifiable item drops from any mob (not only bosses)
+- Added option to show the loot frame when a classifiable item drops from any mob (not only bosses).
 
-- Added option to check pets, toys and mounts
+- Added option to check pets, toys and mounts.
+
+- Added the option to create unlimited custom messages, which can be used for personalizing texts or creating messages in other languages for whispering to the looter.
