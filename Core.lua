@@ -740,6 +740,8 @@ function AddOn:ADDON_LOADED(addon)
                 checkPets = true,
                 chatShowLootFrame = 'disabled',
                 minDelta = 0,
+                checkCustomTexts = false,
+                customTexts = {},
             },
             minimap = {
                 hide = false
@@ -772,6 +774,18 @@ function AddOn:ADDON_LOADED(addon)
     -- Set checkPets default if its not a fresh install
     if not self.db.config.checkPets then
         self.db.config.checkPets = false
+    end
+
+    -- Set checkCustomTexts default if its not a fresh install
+    if not self.db.config.checkCustomTexts then
+        self.db.config.checkCustomTexts = false
+    end
+
+    -- Set customTexts default if its not a fresh install
+    if not self.db.config.customTexts or not next(self.db.config.customTexts) then
+        self.db.config.customTexts = {
+            [1] = L["CUSTOM_TEXT"]
+        }
     end
 
     self.createLootFrame()
@@ -867,6 +881,21 @@ function AddOn:ClearEntries()
             self.Entries[i].ilvl:SetText("0")
             self.Entries[i].itemLink = nil
             self.Entries[i].looter = nil
+
+            if self.Entries[i].customTextMenu then
+                self.Entries[i].customTextMenu:Hide()
+                self.Entries[i].customTextMenu:SetParent(nil)
+                self.Entries[i].customTextMenu:ClearAllPoints()
+                self.Entries[i].customTextMenu:UnregisterAllEvents()
+                self.Entries[i].customTextMenu:SetID(0)
+                self.Entries[i].customTextMenu = nil
+                self.Entries[i].customTextButton:Hide()
+                self.Entries[i].customTextButton:SetParent(nil)
+                self.Entries[i].customTextButton:ClearAllPoints()
+                self.Entries[i].customTextButton:UnregisterAllEvents()
+                self.Entries[i].customTextButton:SetID(0)
+                self.Entries[i].customTextButton = nil
+            end
         end
     end
 end
@@ -935,6 +964,11 @@ function AddOn:AddItemToLootTable(t)
     self:repositionFrames()
 
     entry.whisper:Show()
+
+    if AddOn.db.config.checkCustomTexts and next(AddOn.db.config.customTexts) then
+        entry.customTextButton:Show()
+    end
+
     entry:Show()
 end
 
@@ -975,6 +1009,29 @@ end
 function AddOn:sendWhisperToLooter(itemLink, looterName)
     -- Generate the whisper message by replacing [item] placeholder with the actual item link
     local message = self.Config.whisperMessage:gsub("%[item%]", itemLink)
+
+    -- Send the whisper message to the specified player
+    SendChatMessage(message, "WHISPER", nil, looterName)
+end
+
+--[[
+    Sends a custom whisper message to a player with the provided item link.
+
+    If the provided custom message ID is not found in the configuration, the function falls back to
+    sending a whisper message with the default message.
+
+    @param idMessage The ID of the custom message to send.
+    @param itemLink The item link to include in the whisper message.
+    @param looterName The name of the player to send the whisper to.
+]]
+function AddOn:sendCustomWhisperToLooter(idMessage, itemLink, looterName)
+    -- If the custom message ID is not found in the configuration, send the default message
+    if not self.Config.customTexts or not self.Config.customTexts[idMessage] then
+        return AddOn:sendWhisperToLooter(itemLink, looterName)
+    end
+
+    -- Generate the whisper message by replacing [item] placeholder with the actual item link
+    local message = self.Config.customTexts[idMessage]:gsub("%[item%]", itemLink)
 
     -- Send the whisper message to the specified player
     SendChatMessage(message, "WHISPER", nil, looterName)
