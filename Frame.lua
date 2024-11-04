@@ -422,10 +422,6 @@ function AddOn.createLootFrame()
         entry.whisper:SetPoint("RIGHT", entry, "RIGHT", -30, 0)
         entry.whisper:SetText(L["Whisper"])
         skinButton(entry.whisper, true, "blue")
-        entry.whisper:SetScript("OnClick", function()
-            AddOn:sendWhisperToLooter(entry.itemLink, entry.looter)
-            entry.whisper:Hide()
-        end)
         entry.whisper:Hide()
 
         ---@type table|BackdropTemplate|Button
@@ -491,6 +487,15 @@ function AddOn.createLootFrame()
             end)
             entry.customTextButton:Hide()
         end
+        
+        entry.whisper:SetScript("OnClick", function()
+            AddOn:sendWhisperToLooter(entry.itemLink, entry.looter)
+            entry.whisper:Hide()
+
+            if AddOn.db.config.checkCustomTexts and next(AddOn.db.config.customTexts) and entry.customTextButton then
+                entry.customTextButton:Hide()
+            end
+        end)
 
         lastframe = entry
         AddOn.Entries[i] = entry
