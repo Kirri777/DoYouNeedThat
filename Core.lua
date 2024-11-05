@@ -444,6 +444,12 @@ end
     @return string: The icon to use for the item.
 --]]
 function AddOn:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass, iLvl)
+    -- Check if the item is warbound
+    if self:checkIsWarboundItem(itemLink) then
+        self.Debug("checkIsWarboundItem: true")
+        return false, ''
+    end
+
     -- Check if the item is transmogable
     local checkmog, mog = self:checkAddItemTransmog(itemLink)
 
@@ -741,6 +747,7 @@ function AddOn:ADDON_LOADED(addon)
                 chatShowLootFrame = 'disabled',
                 minDelta = 0,
                 checkCustomTexts = false,
+                hideWarboundItems = false,
                 customTexts = {},
             },
             minimap = {
@@ -774,6 +781,11 @@ function AddOn:ADDON_LOADED(addon)
     -- Set checkPets default if its not a fresh install
     if not self.db.config.checkPets then
         self.db.config.checkPets = false
+    end
+
+    -- Set hideWarboundItems default if its not a fresh install
+    if not self.db.config.hideWarboundItems then
+        self.db.config.hideWarboundItems = false
     end
 
     -- Set checkCustomTexts default if its not a fresh install
@@ -1152,6 +1164,30 @@ function AddOn:CanIMogItCheckItem(itemLink)
     end
 
     return isTransmogable, isKnownByPlayer, isOtherKnown, isOutdated
+end
+
+--[[
+    Checks if an item is warbound and returns its status.
+
+    @param itemLink The link to the item to be checked.
+
+    @return isWarbound (bool) Whether the item is warbound.
+--]]
+function AddOn:checkIsWarboundItem(itemLink)
+    -- Check if the CanIMogIt library is loaded
+    if not CanIMogIt then
+        self.Debug("checkWarboundItem - CanIMogIt: false")
+        return false
+    end
+
+    -- Check if the user has enabled the option to hide warbound items
+    if not self.db.config.hideWarboundItems then
+        self.Debug("hideWarboundItems: false")
+        return false
+    end
+
+    -- Check if the item is warbound
+    return CanIMogIt:IsItemWarbound(itemLink)
 end
 
 LibInspect:SetMaxAge(599)

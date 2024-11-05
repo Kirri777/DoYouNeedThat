@@ -504,13 +504,14 @@ end
 
 --- Options GUI
 function AddOn.createOptionsFrame()
+    local position = -20
     local options = CreateFrame("Frame", "DYNT_Options")
     options.name = "DoYouNeedThat"
 
     -- Debug toggle
     ---@type table|BackdropTemplate|CheckButton
     options.debug = CreateFrame("CheckButton", "DYNT_Options_Debug", options, "ChatConfigCheckButtonTemplate")
-    options.debug:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -20)
+    options.debug:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
     -- DYNT_Options_DebugText:SetText(L["Debug"])
     getglobal(options.debug:GetName() .. 'Text'):SetText(L["Debug"]);
     if AddOn.Config.debug then options.debug:SetChecked(true) end
@@ -518,11 +519,13 @@ function AddOn.createOptionsFrame()
         AddOn.db.config.debug = self:GetChecked()
     end)
 
+    position = position - 30
+
     -- Open after boss kill toggle
     ---@type table|BackdropTemplate|CheckButton
     options.openAfterEncounter = CreateFrame("CheckButton", "DYNT_Options_OpenAfterEncounter", options,
         "ChatConfigCheckButtonTemplate")
-    options.openAfterEncounter:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -50)
+    options.openAfterEncounter:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
     -- DYNT_Options_OpenAfterEncounterText:SetText(L["Open loot window after encounter"])
     getglobal(options.openAfterEncounter:GetName() .. 'Text'):SetText(L["Open loot window after encounter"]);
     if AddOn.Config.openAfterEncounter then options.openAfterEncounter:SetChecked(true) end
@@ -530,11 +533,13 @@ function AddOn.createOptionsFrame()
         AddOn.db.config.openAfterEncounter = self:GetChecked()
     end)
 
+    position = position - 30
+
     -- Check item is Transmogable
     ---@type table|BackdropTemplate|CheckButton
     options.checkTransmogable = CreateFrame("CheckButton", "DYNT_Options_CheckTransmogable", options,
         "ChatConfigCheckButtonTemplate")
-    options.checkTransmogable:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -80)
+    options.checkTransmogable:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
     -- DYNT_Options_CheckTransmogableText:SetText(L["OPTIONS_CHECK_TRANSMOG"])
     getglobal(options.checkTransmogable:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_TRANSMOG"]);
     if AddOn.Config.checkTransmogable then options.checkTransmogable:SetChecked(true) end
@@ -543,11 +548,13 @@ function AddOn.createOptionsFrame()
         AddOn:recreateLootFrame()
     end)
 
+    position = position - 30
+
     -- Show optional source too
     ---@type table|BackdropTemplate|CheckButton
     options.checkTransmogableSource = CreateFrame("CheckButton", "DYNT_Options_CheckTransmogableSource", options,
         "ChatConfigCheckButtonTemplate")
-    options.checkTransmogableSource:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -110)
+    options.checkTransmogableSource:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
     -- DYNT_Options_CheckTransmogableSourceText:SetText(L["OPTIONS_CHECK_TRANSMOG_OTHER_SOURCES"])
     getglobal(options.checkTransmogableSource:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_TRANSMOG_OTHER_SOURCES"]);
     if AddOn.Config.checkTransmogableSource then options.checkTransmogableSource:SetChecked(true) end
@@ -555,43 +562,63 @@ function AddOn.createOptionsFrame()
         AddOn.db.config.checkTransmogableSource = self:GetChecked()
     end)
 
+    position = position - 30
+
+    -- Hide warbound items
+    ---@type table|BackdropTemplate|CheckButton
+    options.hideWarboundItems = CreateFrame("CheckButton", "DYNT_Options_HideWarboundItems", options, "ChatConfigCheckButtonTemplate")
+    options.hideWarboundItems:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
+    getglobal(options.hideWarboundItems:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_HIDE_WARBOUND_ITEMS"]);
+    if AddOn.db.config.hideWarboundItems then options.hideWarboundItems:SetChecked(true) end
+    options.hideWarboundItems:SetScript("OnClick", function(self)
+        AddOn.db.config.hideWarboundItems = self:GetChecked()
+    end)
+
+    position = position - 30
+
     -- Check mounts
     ---@type table|BackdropTemplate|CheckButton
     options.checkMounts = CreateFrame("CheckButton", "DYNT_Options_CheckMounts", options,
         "ChatConfigCheckButtonTemplate")
-    options.checkMounts:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -140)
+    options.checkMounts:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
     getglobal(options.checkMounts:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_MOUNTS"]);
     if AddOn.Config.checkMounts then options.checkMounts:SetChecked(true) end
     options.checkMounts:SetScript("OnClick", function(self)
         AddOn.db.config.checkMounts = self:GetChecked()
     end)
 
+    position = position - 30
+
     -- Check toys
     ---@type table|BackdropTemplate|CheckButton
     options.checkToys = CreateFrame("CheckButton", "DYNT_Options_CheckToys", options,
         "ChatConfigCheckButtonTemplate")
-    options.checkToys:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -170)
+    options.checkToys:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
     getglobal(options.checkToys:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_TOYS"]);
     if AddOn.Config.checkToys then options.checkToys:SetChecked(true) end
     options.checkToys:SetScript("OnClick", function(self)
         AddOn.db.config.checkToys = self:GetChecked()
     end)
 
+    position = position - 30
+
     -- Check pets
     ---@type table|BackdropTemplate|CheckButton
     options.checkPets = CreateFrame("CheckButton", "DYNT_Options_CheckPets", options,
         "ChatConfigCheckButtonTemplate")
-    options.checkPets:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -200)
+    options.checkPets:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
     getglobal(options.checkPets:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_PETS"]);
     if AddOn.Config.checkPets then options.checkPets:SetChecked(true) end
     options.checkPets:SetScript("OnClick", function(self)
         AddOn.db.config.checkPets = self:GetChecked()
     end)
 
+    position = position - 30
+
     -- Hide minimap button
     ---@type table|BackdropTemplate|CheckButton
     options.hideMinimap = CreateFrame("CheckButton", "DYNT_Options_HideMinimap", options, "ChatConfigCheckButtonTemplate")
-    options.hideMinimap:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -230)
+    options.hideMinimap:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
     -- DYNT_Options_HideMinimapText:SetText(L["Hide minimap button"])
     getglobal(options.hideMinimap:GetName() .. 'Text'):SetText(L["Hide minimap button"]);
     if AddOn.db.minimap.hide then options.hideMinimap:SetChecked(true) end
@@ -611,8 +638,10 @@ function AddOn.createOptionsFrame()
         ['everywhere'] = L["SELECT_OPTION_EVERYWHERE"],
     }
 
+    position = position - 40
+
 	options.chatShowLootFrame = CreateFrame("Frame", "DYNT_Options_ChatShowLootFrame", options, "UIDropDownMenuTemplate")
-	options.chatShowLootFrame:SetPoint("TOPLEFT", options, "TOPLEFT", 3, -270)
+	options.chatShowLootFrame:SetPoint("TOPLEFT", options, "TOPLEFT", 3, position)
 	-- options.chatShowLootFrame:SetWidth(150)
     UIDropDownMenu_SetWidth(options.chatShowLootFrame, 150)
     getglobal(options.chatShowLootFrame:GetName() .. 'Text'):SetText(chatshowlootframe_options[AddOn.db.config.chatShowLootFrame]);
@@ -639,11 +668,13 @@ function AddOn.createOptionsFrame()
     options.chatShowLootFrame.labelText:SetShadowOffset(1, -1)
     options.chatShowLootFrame.labelText:SetText(L["OPTIONS_CHECK_CHAT_SHOW_LOOT_FRAME"])
 
+    position = position - 50
+
     -- Whisper message
     ---@type table|BackdropTemplate|EditBox
     options.whisperMessage = CreateFrame("EditBox", "DYNT_Options_WhisperMessage", options, "InputBoxTemplate")
     options.whisperMessage:SetSize(200, 32)
-    options.whisperMessage:SetPoint("TOPLEFT", options, "TOPLEFT", 28, -320)
+    options.whisperMessage:SetPoint("TOPLEFT", options, "TOPLEFT", 28, position)
     options.whisperMessage:SetAutoFocus(false)
     options.whisperMessage:SetMaxLetters(128)
     AddOn.Debug(AddOn.Config.whisperMessage)
@@ -654,6 +685,8 @@ function AddOn.createOptionsFrame()
         AddOn.db.config.whisperMessage = self:GetText()
         self:ClearFocus()
     end)
+
+    position = position - 70
 
     local whisperLabel = options.whisperMessage:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
     whisperLabel:SetPoint("TOPLEFT", options.whisperMessage, "TOPLEFT", -3, 15)
@@ -668,7 +701,7 @@ function AddOn.createOptionsFrame()
     options.minDelta = CreateFrame("Slider", "DYNT_Options_MinDelta", options, "OptionsSliderTemplate")
     options.minDelta:SetWidth(300)
     options.minDelta:SetHeight(20)
-    options.minDelta:SetPoint("TOPLEFT", 28, -390)
+    options.minDelta:SetPoint("TOPLEFT", 28, position)
     options.minDelta:SetOrientation("HORIZONTAL")
     options.minDelta:SetMinMaxValues(0, 100)
     options.minDelta:SetValue(AddOn.Config.minDelta)
@@ -694,11 +727,14 @@ function AddOn.createOptionsFrame()
     options.minDelta.labelText:SetShadowOffset(1, -1)
     options.minDelta.labelText:SetText(L["Minimum itemlevels lower"])
 
+
+    position = position - 40
+
     -- Check custom texts
     ---@type table|BackdropTemplate|CheckButton
     options.checkCustomTexts = CreateFrame("CheckButton", "DYNT_Options_CheckCustomTexts", options,
         "ChatConfigCheckButtonTemplate")
-    options.checkCustomTexts:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -430)
+    options.checkCustomTexts:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
     getglobal(options.checkCustomTexts:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_CUSTOM_TEXTS"]);
     if AddOn.Config.checkCustomTexts then options.checkCustomTexts:SetChecked(true) end
     options.checkCustomTexts:SetScript("OnClick", function(self)
@@ -765,8 +801,7 @@ function AddOn.addCustomTextInput(index, frame)
         frame.customTextInput = {}
     end
 
-    local inputFrame = frame.customTextInput[index]
-    local position = -(index * 30 + 430)
+    local position = -(index * 30 + 460)
 
     ---@type table|BackdropTemplate|EditBox
     frame.customTextInput[index] = CreateFrame("EditBox", "DYNT_Options_CustomTextInput_" .. index, frame, "InputBoxTemplate")
