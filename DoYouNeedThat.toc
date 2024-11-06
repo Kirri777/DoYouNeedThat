@@ -2,7 +2,7 @@
 
 ## Title: DoYouNeedThat?
 ## Author: Kraffs <Numinous-TarrenMill LootCouncil-TarrenMill>
-## Version: 1.2.8
+## Version: 1.2.9
 ## Notes: Pesters people for loot because Personal Loot is fun! (Kirri mod)
 ## OptionalDeps: CanIMogIt
 ## SavedVariables: DyntDB
