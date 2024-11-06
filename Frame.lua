@@ -1,6 +1,8 @@
 local _, AddOn = ...
 local L = AddOn.L
 
+AddOn.categoryID = nil
+
 local icon = LibStub("LibDBIcon-1.0")
 local CreateFrame, unpack, GetItemInfo, select, GetItemQualityColor = CreateFrame, unpack, C_Item.GetItemInfo, select,
     C_Item.GetItemQualityColor
@@ -551,189 +553,38 @@ function AddOn.createLootFrame()
     end
 end
 
---- Options GUI
+--[[
+    Creates the options frame for the AddOn in the Interface Options window
+
+    This function checks if the Settings module is available and if so, creates a new
+    category frame and a subcategory frame for the custom messages. It then registers
+    the subcategory frame with the category frame and the category frame with the
+    Settings module. Finally, it saves the ID of the category frame in the AddOn object
+    for later use.
+
+    @return void
+--]]
 function AddOn.createOptionsFrame()
-    local position = -20
-    local options = CreateFrame("Frame", "DYNT_Options")
-    options.name = "DoYouNeedThat"
-
-    -- Debug toggle
-    ---@type table|BackdropTemplate|CheckButton
-    options.debug = CreateFrame("CheckButton", "DYNT_Options_Debug", options, "ChatConfigCheckButtonTemplate")
-    options.debug:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
-    -- DYNT_Options_DebugText:SetText(L["Debug"])
-    getglobal(options.debug:GetName() .. 'Text'):SetText(L["Debug"]);
-    if AddOn.Config.debug then options.debug:SetChecked(true) end
-    options.debug:SetScript("OnClick", function(self)
-        AddOn.db.config.debug = self:GetChecked()
-    end)
-
-    position = position - 30
-
-    -- Open after boss kill toggle
-    ---@type table|BackdropTemplate|CheckButton
-    options.openAfterEncounter = CreateFrame("CheckButton", "DYNT_Options_OpenAfterEncounter", options,
-        "ChatConfigCheckButtonTemplate")
-    options.openAfterEncounter:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
-    -- DYNT_Options_OpenAfterEncounterText:SetText(L["Open loot window after encounter"])
-    getglobal(options.openAfterEncounter:GetName() .. 'Text'):SetText(L["Open loot window after encounter"]);
-    if AddOn.Config.openAfterEncounter then options.openAfterEncounter:SetChecked(true) end
-    options.openAfterEncounter:SetScript("OnClick", function(self)
-        AddOn.db.config.openAfterEncounter = self:GetChecked()
-    end)
-
-    position = position - 30
-
-    -- Check item is Transmogable
-    ---@type table|BackdropTemplate|CheckButton
-    options.checkTransmogable = CreateFrame("CheckButton", "DYNT_Options_CheckTransmogable", options,
-        "ChatConfigCheckButtonTemplate")
-    options.checkTransmogable:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
-    -- DYNT_Options_CheckTransmogableText:SetText(L["OPTIONS_CHECK_TRANSMOG"])
-    getglobal(options.checkTransmogable:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_TRANSMOG"]);
-    if AddOn.Config.checkTransmogable then options.checkTransmogable:SetChecked(true) end
-    options.checkTransmogable:SetScript("OnClick", function(self)
-        AddOn.db.config.checkTransmogable = self:GetChecked()
-        AddOn:recreateLootFrame()
-    end)
-
-    position = position - 30
-
-    -- Show optional source too
-    ---@type table|BackdropTemplate|CheckButton
-    options.checkTransmogableSource = CreateFrame("CheckButton", "DYNT_Options_CheckTransmogableSource", options,
-        "ChatConfigCheckButtonTemplate")
-    options.checkTransmogableSource:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
-    -- DYNT_Options_CheckTransmogableSourceText:SetText(L["OPTIONS_CHECK_TRANSMOG_OTHER_SOURCES"])
-    getglobal(options.checkTransmogableSource:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_TRANSMOG_OTHER_SOURCES"]);
-    if AddOn.Config.checkTransmogableSource then options.checkTransmogableSource:SetChecked(true) end
-    options.checkTransmogableSource:SetScript("OnClick", function(self)
-        AddOn.db.config.checkTransmogableSource = self:GetChecked()
-    end)
-
-    position = position - 30
-
-    -- Hide warbound items
-    ---@type table|BackdropTemplate|CheckButton
-    options.hideWarboundItems = CreateFrame("CheckButton", "DYNT_Options_HideWarboundItems", options,
-        "ChatConfigCheckButtonTemplate")
-    options.hideWarboundItems:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
-    getglobal(options.hideWarboundItems:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_HIDE_WARBOUND_ITEMS"]);
-    if AddOn.db.config.hideWarboundItems then options.hideWarboundItems:SetChecked(true) end
-    options.hideWarboundItems:SetScript("OnClick", function(self)
-        AddOn.db.config.hideWarboundItems = self:GetChecked()
-    end)
-
-    position = position - 30
-
-    -- Hide ilvl diffrent
-    ---@type table|BackdropTemplate|CheckButton
-    options.showIlvlDiffrent = CreateFrame("CheckButton", "DYNT_Options_ShowIlvlDiffrent", options,
-        "ChatConfigCheckButtonTemplate")
-    options.showIlvlDiffrent:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
-    getglobal(options.showIlvlDiffrent:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_SHOW_ILVL_DIFFRENT"]);
-    if AddOn.db.config.showIlvlDiffrent then options.showIlvlDiffrent:SetChecked(true) end
-    options.showIlvlDiffrent:SetScript("OnClick", function(self)
-        AddOn.db.config.showIlvlDiffrent = self:GetChecked()
-        AddOn:recreateLootFrame()
-    end)
-
-    position = position - 30
-
-    -- Check mounts
-    ---@type table|BackdropTemplate|CheckButton
-    options.checkMounts = CreateFrame("CheckButton", "DYNT_Options_CheckMounts", options,
-        "ChatConfigCheckButtonTemplate")
-    options.checkMounts:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
-    getglobal(options.checkMounts:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_MOUNTS"]);
-    if AddOn.Config.checkMounts then options.checkMounts:SetChecked(true) end
-    options.checkMounts:SetScript("OnClick", function(self)
-        AddOn.db.config.checkMounts = self:GetChecked()
-    end)
-
-    position = position - 30
-
-    -- Check toys
-    ---@type table|BackdropTemplate|CheckButton
-    options.checkToys = CreateFrame("CheckButton", "DYNT_Options_CheckToys", options,
-        "ChatConfigCheckButtonTemplate")
-    options.checkToys:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
-    getglobal(options.checkToys:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_TOYS"]);
-    if AddOn.Config.checkToys then options.checkToys:SetChecked(true) end
-    options.checkToys:SetScript("OnClick", function(self)
-        AddOn.db.config.checkToys = self:GetChecked()
-    end)
-
-    position = position - 30
-
-    -- Check pets
-    ---@type table|BackdropTemplate|CheckButton
-    options.checkPets = CreateFrame("CheckButton", "DYNT_Options_CheckPets", options,
-        "ChatConfigCheckButtonTemplate")
-    options.checkPets:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
-    getglobal(options.checkPets:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_PETS"]);
-    if AddOn.Config.checkPets then options.checkPets:SetChecked(true) end
-    options.checkPets:SetScript("OnClick", function(self)
-        AddOn.db.config.checkPets = self:GetChecked()
-    end)
-
-    position = position - 30
-
-    -- Hide minimap button
-    ---@type table|BackdropTemplate|CheckButton
-    options.hideMinimap = CreateFrame("CheckButton", "DYNT_Options_HideMinimap", options, "ChatConfigCheckButtonTemplate")
-    options.hideMinimap:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
-    -- DYNT_Options_HideMinimapText:SetText(L["Hide minimap button"])
-    getglobal(options.hideMinimap:GetName() .. 'Text'):SetText(L["Hide minimap button"]);
-    if AddOn.db.minimap.hide then options.hideMinimap:SetChecked(true) end
-    options.hideMinimap:SetScript("OnClick", function(self)
-        AddOn.db.minimap.hide = self:GetChecked()
-
-        if not self:GetChecked() then
-            icon:Show("DoYouNeedThat")
-        else
-            icon:Hide("DoYouNeedThat")
-        end
-    end)
-
-    local chatshowlootframe_options = {
-        ['disabled'] = L["SELECT_OPTION_DISABLED"],
-        ['only_dungeon_raid'] = L["SELECT_OPTION_ONLY_DUNGEON_RAID"],
-        ['everywhere'] = L["SELECT_OPTION_EVERYWHERE"],
-    }
-
-    position = position - 40
-
-    options.chatShowLootFrame = CreateFrame("Frame", "DYNT_Options_ChatShowLootFrame", options, "UIDropDownMenuTemplate")
-    options.chatShowLootFrame:SetPoint("TOPLEFT", options, "TOPLEFT", 3, position)
-    -- options.chatShowLootFrame:SetWidth(150)
-    UIDropDownMenu_SetWidth(options.chatShowLootFrame, 150)
-    getglobal(options.chatShowLootFrame:GetName() .. 'Text'):SetText(chatshowlootframe_options
-    [AddOn.db.config.chatShowLootFrame]);
-    options.chatShowLootFrame.initialize = function()
-        local info = {}
-        for key, value in pairs(chatshowlootframe_options) do
-            info.text = value
-            info.value = key
-            info.checked = key == AddOn.db.config.chatShowLootFrame
-            info.func = function(self)
-                AddOn.db.config.chatShowLootFrame = self.value
-                getglobal(options.chatShowLootFrame:GetName() .. 'Text'):SetText(self:GetText());
-                AddOn:PLAYER_ENTERING_WORLD()
-            end
-            UIDropDownMenu_AddButton(info)
-        end
+    if (Settings ~= nil) then
+        -- wow10
+        local category = AddOn.createSettingsPage()
+        local subcategorycustommessages = AddOn.createSubcategoryCustomMessages()
+        Settings.RegisterCanvasLayoutSubcategory(category, subcategorycustommessages, L["SETTINGS_MENU_CUSTOM_MESSAGES"])
+        Settings.RegisterAddOnCategory(category)
+        AddOn.categoryID = category:GetID() -- for OpenToCategory use
     end
+end
 
-    options.chatShowLootFrame.labelText = options.chatShowLootFrame:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
-    options.chatShowLootFrame.labelText:SetPoint("TOPLEFT", options.chatShowLootFrame, "TOPLEFT", 20, 15)
-    options.chatShowLootFrame.labelText:SetJustifyH("LEFT")
-    options.chatShowLootFrame.labelText:SetTextColor(1, 1, 1)
-    options.chatShowLootFrame.labelText:SetShadowColor(0, 0, 0)
-    options.chatShowLootFrame.labelText:SetShadowOffset(1, -1)
-    options.chatShowLootFrame.labelText:SetText(L["OPTIONS_CHECK_CHAT_SHOW_LOOT_FRAME"])
+--[[
+    Creates a new subcategory for custom messages in the interface options
 
-    position = position - 50
+    @return A table containing the subcategory frame
+--]]
+function AddOn.createSubcategoryCustomMessages()
+    local position = -20
+    local options = CreateFrame("Frame")
+    options.parent = "DoYouNeedThat"
+    options.name = "DoYouNeedThat_CustomMessages"
 
     -- Whisper message
     ---@type table|BackdropTemplate|EditBox
@@ -751,107 +602,16 @@ function AddOn.createOptionsFrame()
         self:ClearFocus()
     end)
 
-    position = position - 70
+    position = position - 40
 
     local whisperLabel = options.whisperMessage:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
     whisperLabel:SetPoint("TOPLEFT", options.whisperMessage, "TOPLEFT", -3, 15)
-    --whisperLabel:SetPoint("BOTTOMRIGHT", options.whisperMessage, "TOPRIGHT", -6, 0)
     whisperLabel:SetJustifyH("LEFT")
     options.whisperMessage.labelText = whisperLabel
     options.whisperMessage.labelText:SetTextColor(1, 1, 1)
     options.whisperMessage.labelText:SetShadowColor(0, 0, 0)
     options.whisperMessage.labelText:SetShadowOffset(1, -1)
     options.whisperMessage.labelText:SetText(L["Whisper Message"])
-
-    options.minDelta = CreateFrame("Slider", "DYNT_Options_MinDelta", options, "OptionsSliderTemplate")
-    options.minDelta:SetWidth(300)
-    options.minDelta:SetHeight(20)
-    options.minDelta:SetPoint("TOPLEFT", 28, position)
-    options.minDelta:SetOrientation("HORIZONTAL")
-    options.minDelta:SetMinMaxValues(0, 100)
-    options.minDelta:SetValue(AddOn.Config.minDelta)
-    options.minDelta:SetValueStep(1)
-    options.minDelta:SetObeyStepOnDrag(true)
-    options.minDelta:SetScript("OnValueChanged", function(_, val)
-        getglobal(options.minDelta:GetName() .. 'Text'):SetText(val); --Sets the "title" text (top-centre of slider).
-        AddOn.db.config.minDelta = val
-    end)
-    options.minDelta.tooltipText = L["Minimum itemlevel allowed"]                      --Creates a tooltip on mouseover.
-    getglobal(options.minDelta:GetName() .. 'Low'):SetText('1');                       --Sets the left-side slider text (default is "Low").
-    getglobal(options.minDelta:GetName() .. 'High'):SetText('100');                    --Sets the right-side slider text (default is "High").
-    getglobal(options.minDelta:GetName() .. 'Text'):SetText(AddOn.db.config.minDelta); --Sets the "title" text (top-centre of slider).
-    options.minDelta:Show()
-
-
-    local minDeltaLabel = options.minDelta:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
-    minDeltaLabel:SetPoint("TOPLEFT", options.minDelta, "TOPLEFT", -3, 30)
-    minDeltaLabel:SetJustifyH("LEFT")
-    options.minDelta.labelText = minDeltaLabel
-    options.minDelta.labelText:SetTextColor(1, 1, 1)
-    options.minDelta.labelText:SetShadowColor(0, 0, 0)
-    options.minDelta.labelText:SetShadowOffset(1, -1)
-    options.minDelta.labelText:SetText(L["Minimum itemlevels lower"])
-
-    -- Set the field values to their value in SavedVariables.
-    function options.refreshFields()
-        options.debug:SetChecked(AddOn.Config.debug)
-        options.openAfterEncounter:SetChecked(AddOn.Config.openAfterEncounter)
-        options.checkTransmogable:SetChecked(AddOn.Config.checkTransmogable)
-        options.checkTransmogableSource:SetChecked(AddOn.Config.checkTransmogableSource)
-        options.whisperMessage:SetText(AddOn.Config.whisperMessage)
-        options.whisperMessage:SetCursorPosition(0)
-        options.hideMinimap:SetChecked(AddOn.db.minimap.hide)
-        options.minDelta:SetValue(AddOn.Config.minDelta)
-    end
-
-    function options.okay()
-        -- print(options.checkTransmogable:GetChecked())
-        xpcall(function()
-            AddOn.db.config.debug = options.debug:GetChecked()
-            AddOn.db.config.openAfterEncounter = options.openAfterEncounter:GetChecked()
-            AddOn.db.config.checkTransmogable = options.checkTransmogable:GetChecked()
-            AddOn.db.config.checkTransmogableSource = options.checkTransmogableSource:GetChecked()
-            AddOn.db.config.whisperMessage = options.whisperMessage:GetText()
-            if options.hideMinimap:GetChecked() then
-                icon:Hide("DoYouNeedThat")
-                AddOn.db.minimap.hide = true;
-            else
-                icon:Show("DoYouNeedThat")
-                AddOn.db.minimap.hide = false;
-            end
-            AddOn.db.config.minDelta = options.minDelta:GetValue()
-        end, geterrorhandler())
-    end
-
-    function options.cancel()
-        -- Return the fields to a clean slate
-        options.refreshFields()
-    end
-
-    local subcategorycustommessages = AddOn.createSubcategoryCustomMessages()
-
-    if (Settings ~= nil) then
-        -- wow10
-        local category = Settings.RegisterCanvasLayoutCategory(options, 'DoYouNeedThat')
-        Settings.RegisterCanvasLayoutSubcategory(category, subcategorycustommessages, L["SETTINGS_MENU_CUSTOM_MESSAGES"])
-        Settings.RegisterAddOnCategory(category)
-        options.categoryID = category:GetID() -- for OpenToCategory use
-    else
-        InterfaceOptions_AddCategory(options)
-        InterfaceOptions_AddCategory(subcategorycustommessages)
-    end
-end
-
---[[
-    Creates a new subcategory for custom messages in the interface options
-
-    @return A table containing the subcategory frame
---]]
-function AddOn.createSubcategoryCustomMessages()
-    local position = -20
-    local options = CreateFrame("Frame")
-    options.parent = "DoYouNeedThat"
-    options.name = "DoYouNeedThat_CustomMessages"
 
     -- Check custom texts
     ---@type table|BackdropTemplate|CheckButton
@@ -874,6 +634,185 @@ function AddOn.createSubcategoryCustomMessages()
 end
 
 --[[
+    Creates the main settings page for the AddOn in the Interface Options window.
+
+    This function registers a new vertical layout category for the AddOn
+    and returns the category for further configuration.
+
+    @return The registered category for the AddOn settings.
+--]]
+function AddOn.createSettingsPage()
+    -- Register a new vertical layout category for the AddOn
+    local category = Settings.RegisterVerticalLayoutCategory("DoYouNeedThat")
+
+    local page_settings = {
+        {
+            type = "checkbox",
+            name = L["OPTIONS_CHECK_DEBUG"],
+            variableKey = "debug",
+            variableTbl = AddOn.db.config,
+            tooltip = L["OPTIONS_CHECK_DEBUG_TOOLTIP"],
+            default = false
+        },
+        {
+            type = "checkbox",
+            name = L["OPTIONS_CHECK_OPEN_AFTER_ENCOUNTER"],
+            variableKey = "openAfterEncounter",
+            variableTbl = AddOn.db.config,
+            tooltip = L["OPTIONS_CHECK_OPEN_AFTER_ENCOUNTER_TOOLTIP"],
+            default = true
+        },
+        {
+            type = "checkbox",
+            name = L["OPTIONS_CHECK_TRANSMOGABLE"],
+            variableKey = "checkTransmogable",
+            variableTbl = AddOn.db.config,
+            tooltip = L["OPTIONS_CHECK_TRANSMOGABLE_TOOLTIP"],
+            default = false,
+            onChange = function()
+                AddOn:recreateLootFrame()
+            end
+        },
+        {
+            type = "checkbox",
+            name = L["OPTIONS_CHECK_TRANSMOGABLE_OTHER_SOURCE"],
+            variableKey = "checkTransmogableSource",
+            variableTbl = AddOn.db.config,
+            tooltip = L["OPTIONS_CHECK_TRANSMOGABLE_OTHER_SOURCE_TOOLTIP"],
+            default = false
+        },
+        {
+            type = "checkbox",
+            name = L["OPTIONS_CHECK_HIDE_WARBOUND_ITEMS"],
+            variableKey = "hideWarboundItems",
+            variableTbl = AddOn.db.config,
+            tooltip = L["OPTIONS_CHECK_HIDE_WARBOUND_ITEMS_TOOLTIP"],
+            default = false
+        },
+        {
+            type = "checkbox",
+            name = L["OPTIONS_CHECK_SHOW_ILVL_DIFFRENT"],
+            variableKey = "showIlvlDiffrent",
+            variableTbl = AddOn.db.config,
+            tooltip = L["OPTIONS_CHECK_SHOW_ILVL_DIFFRENT_TOOLTIP"],
+            default = false,
+            onChange = function()
+                AddOn:recreateLootFrame()
+            end
+        },
+        {
+            type = "checkbox",
+            name = L["OPTIONS_CHECK_CHECK_MOUNTS"],
+            variableKey = "checkMounts",
+            variableTbl = AddOn.db.config,
+            tooltip = L["OPTIONS_CHECK_CHECK_MOUNTS_TOOLTIP"],
+            default = true
+        },
+        {
+            type = "checkbox",
+            name = L["OPTIONS_CHECK_CHECK_TOYS"],
+            variableKey = "checkToys",
+            variableTbl = AddOn.db.config,
+            tooltip = L["OPTIONS_CHECK_CHECK_TOYS_TOOLTIP"],
+            default = true
+        },
+        {
+            type = "checkbox",
+            name = L["OPTIONS_CHECK_CHECK_PETS"],
+            variableKey = "checkPets",
+            variableTbl = AddOn.db.config,
+            tooltip = L["OPTIONS_CHECK_CHECK_PETS_TOOLTIP"],
+            default = true
+        },
+        {
+            type = "checkbox",
+            name = L["OPTIONS_CHECK_HIDE_MINIMAP"],
+            variableKey = "hide",
+            variableTbl = AddOn.db.minimap,
+            tooltip = L["OPTIONS_CHECK_HIDE_MINIMAP_TOOLTIP"],
+            default = false,
+            onChange = function(_, value)
+                if not value then
+                    icon:Show("DoYouNeedThat")
+                else
+                    icon:Hide("DoYouNeedThat")
+                end
+            end
+        },
+        {
+            type = "dropdown",
+            name = L["OPTIONS_CHECK_CHAT_SHOW_LOOT_FRAME"],
+            variableKey = "chatShowLootFrame",
+            variableTbl = AddOn.db.config,
+            tooltip = L["OPTIONS_CHECK_CHAT_SHOW_LOOT_FRAME_TOOLTIP"],
+            default = 'disabled',
+            options = function()
+                local container = Settings.CreateControlTextContainer()
+                container:Add('disabled', L["SELECT_OPTION_DISABLED"])
+                container:Add('only_dungeon_raid', L["SELECT_OPTION_ONLY_DUNGEON_RAID"])
+                container:Add('everywhere', L["SELECT_OPTION_EVERYWHERE"])
+                return container:GetData();
+            end,
+            onChange = function()
+                AddOn:PLAYER_ENTERING_WORLD()
+            end
+        },
+        {
+            type = "slider",
+            name = L["OPTIONS_SLIDER_DELTA"],
+            variableKey = "minDelta",
+            variableTbl = AddOn.db.config,
+            tooltip = L["OPTIONS_SLIDER_DELTA_TOOLTIP"],
+            default = 0,
+            minValue = 0,
+            maxValue = 500,
+            step = 1
+        }
+    }
+
+    for _, setting in ipairs(page_settings) do
+        local variable = "DoYouNeedThat_" .. setting.variableKey
+
+        if setting.type == "checkbox" then
+            local option = Settings.RegisterAddOnSetting(category, variable, setting.variableKey, setting.variableTbl,
+                type(setting.default), setting.name, setting.default)
+
+            if setting.onChange then
+                option:SetValueChangedCallback(setting.onChange)
+            end
+
+            Settings.CreateCheckbox(category, option, setting.tooltip)
+        end
+
+        if setting.type == "dropdown" then
+            local option = Settings.RegisterAddOnSetting(category, variable, setting.variableKey, setting.variableTbl,
+                type(setting.default), setting.name, setting.default)
+
+            if setting.onChange then
+                option:SetValueChangedCallback(setting.onChange)
+            end
+
+            Settings.CreateDropdown(category, option, setting.options, setting.tooltip)
+        end
+
+        if setting.type == "slider" then
+            local option = Settings.RegisterAddOnSetting(category, variable, setting.variableKey, setting.variableTbl,
+                type(setting.default), setting.name, setting.default)
+
+            if setting.onChange then
+                option:SetValueChangedCallback(setting.onChange)
+            end
+
+            local options = Settings.CreateSliderOptions(setting.minValue, setting.maxValue, setting.step)
+            options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right);
+            Settings.CreateSlider(category, option, options, setting.tooltip)
+        end
+    end
+
+    return category
+end
+
+--[[
     Adds a new custom text input field to the specified frame at the specified index and saves the existing custom text inputs to the db.
 
     @param index The index of the new custom text input field
@@ -884,7 +823,7 @@ function AddOn.addCustomTextInput(index, frame)
         frame.customTextInput = {}
     end
 
-    local position = -(index * 30 + 20)
+    local position = -(index * 30 + 60)
 
     ---@type table|BackdropTemplate|EditBox
     frame.customTextInput[index] = CreateFrame("EditBox", "DYNT_Options_CustomTextInput_" .. index, frame,

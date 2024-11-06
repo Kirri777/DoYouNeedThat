@@ -27,12 +27,8 @@ local LDB = LibStub("LibDataBroker-1.1"):NewDataObject("DoYouNeedThat", {
     icon = "Interface\\Icons\\inv_misc_bag_17",
     OnClick = function(_, buttonPressed)
         if buttonPressed == "RightButton" then
-            if (Settings ~= nil) then
-                -- wow10
-                local settingsCategoryID = _G['DYNT_Options'].categoryID
-                Settings.OpenToCategory(settingsCategoryID)
-            else
-                InterfaceOptionsFrame_OpenToCategory("DoYouNeedThat")
+            if (Settings ~= nil) and AddOn.categoryID then
+                Settings.OpenToCategory(AddOn.categoryID)
             end
         else
             AddOn:ToggleWindow()
