@@ -142,6 +142,19 @@ function AddOn:repositionFrames()
         for i = 1, #entries do
             local currententry = entries[i]
 
+            if AddOn.db.config.showIlvlDiffrent and currententry.ilvlchange then
+                -- print(currententry.ilvlchange .. ' ' .. currententry.itemLink)
+                if currententry.ilvlchange > 0 then
+                    currententry.ilvl2:SetText(ilvl .. " (\124cFF8080FF+" .. currententry.ilvlchange .. "\124r)")
+                elseif currententry.ilvlchange < 0 then
+                    currententry.ilvl2:SetText(ilvl .. " (\124cFFFF8080" .. currententry.ilvlchange .. "\124r)")
+                else
+                    currententry.ilvl2:SetText(ilvl)
+                end
+            else
+                currententry.ilvl2:SetText(ilvl)
+            end
+
             if currententry.itemLink then
                 if lastentry then
                     currententry:SetPoint("TOPLEFT", lastentry, "BOTTOMLEFT", 0, 1)
@@ -324,6 +337,20 @@ function AddOn.createLootFrame()
         content_size = content_size + 40
         lootFrame_size = lootFrame_size + 40
     end
+
+    if AddOn.db.config.showIlvlDiffrent then
+        content_size = content_size + 20
+        lootFrame_size = lootFrame_size + 20
+
+        if AddOn.db.config.checkTransmogable and CanIMogIt then
+            loot_table.canimogit_text:SetPoint("TOPLEFT", loot_table, "TOPLEFT", 110, 16)
+            loot_table.name_text:SetPoint("TOPLEFT", loot_table, "TOPLEFT", 150, 16)
+            loot_table.equipped_text:SetPoint("TOPLEFT", loot_table, "TOPLEFT", 235, 16)
+        else
+            loot_table.name_text:SetPoint("TOPLEFT", loot_table, "TOPLEFT", 110, 16)
+            loot_table.equipped_text:SetPoint("TOPLEFT", loot_table, "TOPLEFT", 195, 16)
+        end
+    end
     
     AddOn.lootFrame:SetSize(lootFrame_size, 200)
     loot_table.content:SetSize(content_size, 140)
@@ -358,6 +385,7 @@ function AddOn.createLootFrame()
         entry.itemLink = nil
         entry.itemID = nil
         entry.looter = nil
+        entry.ilvlchange = nil
 
         ---@type table|BackdropTemplate|Frame
         entry.item = CreateFrame("Button", nil, entry, "BackdropTemplate")
@@ -379,6 +407,12 @@ function AddOn.createLootFrame()
         entry.ilvl:SetText("0")
         entry.ilvl:SetTextColor(1, 1, 1)
         entry.ilvl:SetPoint("LEFT", entry, "LEFT", 50, 0)
+        entry.ilvl:Hide()
+
+        entry.ilvl2 = entry:CreateFontString(nil, "OVERLAY", "dynt_normal_text")
+        entry.ilvl2:SetText("0")
+        entry.ilvl2:SetTextColor(1, 1, 1)
+        entry.ilvl2:SetPoint("LEFT", entry, "LEFT", 50, 0)
 
         entry.name = entry:CreateFontString(nil, "OVERLAY", "dynt_normal_text")
         entry.name:SetText("test")
@@ -436,8 +470,10 @@ function AddOn.createLootFrame()
             entry.looter = nil
             entry.guid = nil
             entry.ilvl:SetText("0")
+            entry.ilvl2:SetText("0")
             entry.itemID = nil
             entry.looter = nil
+            entry.ilvlchange = nil
             
             -- Re order
             AddOn:repositionFrames()
@@ -452,6 +488,19 @@ function AddOn.createLootFrame()
             entry.name:SetPoint("LEFT", entry, "LEFT", 130, 0)
             entry.looterEq1:SetPoint("LEFT", entry, "LEFT", 221, 0)
             entry.looterEq2:SetPoint("LEFT", entry, "LEFT", 243, 0)
+        end
+
+        if AddOn.db.config.showIlvlDiffrent then
+            if AddOn.db.config.checkTransmogable and CanIMogIt then
+                entry.mog:SetPoint("LEFT", entry, "LEFT", 110, 0)
+                entry.name:SetPoint("LEFT", entry, "LEFT", 150, 0)
+                entry.looterEq1:SetPoint("LEFT", entry, "LEFT", 241, 0)
+                entry.looterEq2:SetPoint("LEFT", entry, "LEFT", 263, 0)
+            else
+                entry.name:SetPoint("LEFT", entry, "LEFT", 110, 0)
+                entry.looterEq1:SetPoint("LEFT", entry, "LEFT", 201, 0)
+                entry.looterEq2:SetPoint("LEFT", entry, "LEFT", 223, 0)
+            end
         end
 
         if AddOn.db.config.checkCustomTexts and next(AddOn.db.config.customTexts) then
@@ -572,6 +621,19 @@ function AddOn.createOptionsFrame()
     if AddOn.db.config.hideWarboundItems then options.hideWarboundItems:SetChecked(true) end
     options.hideWarboundItems:SetScript("OnClick", function(self)
         AddOn.db.config.hideWarboundItems = self:GetChecked()
+    end)
+
+    position = position - 30
+
+    -- Hide ilvl diffrent
+    ---@type table|BackdropTemplate|CheckButton
+    options.showIlvlDiffrent = CreateFrame("CheckButton", "DYNT_Options_ShowIlvlDiffrent", options, "ChatConfigCheckButtonTemplate")
+    options.showIlvlDiffrent:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
+    getglobal(options.showIlvlDiffrent:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_SHOW_ILVL_DIFFRENT"]);
+    if AddOn.db.config.showIlvlDiffrent then options.showIlvlDiffrent:SetChecked(true) end
+    options.showIlvlDiffrent:SetScript("OnClick", function(self)
+        AddOn.db.config.showIlvlDiffrent = self:GetChecked()
+        AddOn:recreateLootFrame()
     end)
 
     position = position - 30
@@ -801,7 +863,7 @@ function AddOn.addCustomTextInput(index, frame)
         frame.customTextInput = {}
     end
 
-    local position = -(index * 30 + 460)
+    local position = -(index * 30 + 490)
 
     ---@type table|BackdropTemplate|EditBox
     frame.customTextInput[index] = CreateFrame("EditBox", "DYNT_Options_CustomTextInput_" .. index, frame, "InputBoxTemplate")

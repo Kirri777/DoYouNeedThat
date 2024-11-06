@@ -55,6 +55,8 @@ AddOn.inspectCount = 1
 AddOn.instanceType = 'none'
 AddOn.eventsLoaded = false
 
+local ilvlchange = nil
+
 function AddOn.Print(msg)
     print("[|cff3399FFDYNT|r] " .. msg)
 end
@@ -142,6 +144,7 @@ function AddOn:CHAT_MSG_LOOT(...)
             return AddOn:checkOther(itemLink, looter)
         end
 
+        ilvlchange = nil
         local check, mog = self:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass, itemLevel)
 
         if not check then
@@ -748,6 +751,7 @@ function AddOn:ADDON_LOADED(addon)
                 minDelta = 0,
                 checkCustomTexts = false,
                 hideWarboundItems = false,
+                showIlvlDiffrent = false,
                 customTexts = {},
             },
             minimap = {
@@ -786,6 +790,11 @@ function AddOn:ADDON_LOADED(addon)
     -- Set hideWarboundItems default if its not a fresh install
     if not self.db.config.hideWarboundItems then
         self.db.config.hideWarboundItems = false
+    end
+
+    -- Set showIlvlDiffrent default if its not a fresh install
+    if not self.db.config.showIlvlDiffrent then
+        self.db.config.showIlvlDiffrent = false
     end
 
     -- Set checkCustomTexts default if its not a fresh install
@@ -844,26 +853,54 @@ function AddOn:IsItemUpgrade(ilvl, equipLoc)
         return eq <= eqilvl or eqilvl >= eq - delta
     end
 
-    -- print('ilvl', ilvl, 'equipLoc', equipLoc)
-
     if ilvl ~= nil and equipLoc ~= nil and equipLoc ~= '' then
         local delta = self.Config.minDelta
         -- Evaluate item. If ilvl > your current ilvl
         if equipLoc == 'INVTYPE_FINGER' then
             local eqIlvl1 = GetEquippedIlvlBySlotID(11)
             local eqIlvl2 = GetEquippedIlvlBySlotID(12)
+
+            if eqIlvl1 then
+                ilvlchange = ilvl - eqIlvl1
+            end
+
+            if eqIlvl2 and (not ilvlchange or (ilvl - eqIlvl2) > ilvlchange) then
+                ilvlchange = ilvl - eqIlvl2
+            end
+
             return overOrWithinMin(ilvl, eqIlvl1, delta) or overOrWithinMin(ilvl, eqIlvl2, delta)
         elseif equipLoc == 'INVTYPE_TRINKET' then
             local eqIlvl1 = GetEquippedIlvlBySlotID(13)
             local eqIlvl2 = GetEquippedIlvlBySlotID(14)
+            if eqIlvl1 then
+                ilvlchange = ilvl - eqIlvl1
+            end
+
+            if eqIlvl2 and (not ilvlchange or (ilvl - eqIlvl2) > ilvlchange) then
+                ilvlchange = ilvl - eqIlvl2
+            end
+            
             return overOrWithinMin(ilvl, eqIlvl1, delta) or overOrWithinMin(ilvl, eqIlvl2, delta)
         elseif equipLoc == 'INVTYPE_WEAPON' or equipLoc == 'INVTYPE_HOLDABLE' or equipLoc == 'INVTYPE_WEAPONOFFHAND' or equipLoc == 'INVTYPE_SHIELD' then
             local eqIlvl1 = GetEquippedIlvlBySlotID(16)
             local eqIlvl2 = GetEquippedIlvlBySlotID(17)
+            if eqIlvl1 then
+                ilvlchange = ilvl - eqIlvl1
+            end
+
+            if eqIlvl2 and (not ilvlchange or (ilvl - eqIlvl2) > ilvlchange) then
+                ilvlchange = ilvl - eqIlvl2
+            end
+            
             return overOrWithinMin(ilvl, eqIlvl1, delta) or overOrWithinMin(ilvl, eqIlvl2, delta)
         else
             local slotID = AddOn.Utils.GetSlotID(equipLoc)
             local eqIlvl = GetEquippedIlvlBySlotID(slotID)
+
+            if eqIlvl then
+                ilvlchange = ilvl - eqIlvl
+            end
+
             return overOrWithinMin(ilvl, eqIlvl, delta)
         end
     end
@@ -891,8 +928,10 @@ function AddOn:ClearEntries()
             self.Entries[i].guid = nil
             self.Entries[i].itemID = nil
             self.Entries[i].ilvl:SetText("0")
+            self.Entries[i].ilvl2:SetText("0")
             self.Entries[i].itemLink = nil
             self.Entries[i].looter = nil
+            self.Entries[i].ilvlchange = nil
 
             if self.Entries[i].customTextMenu then
                 self.Entries[i].customTextMenu:Hide()
@@ -938,9 +977,9 @@ function AddOn:AddItemToLootTable(t)
     local classColor = RAID_CLASS_COLORS[select(2, UnitClass(character))]
     entry.itemLink = t[1]
     entry.looter = t[2]
+    entry.ilvlchange = ilvlchange
     entry.guid = UnitGUID(character)
 
-    
     -- print('ilvl', ilvl, 'equipLoc', equipLoc)
     self.Debug("equipLoc: " .. equipLoc)
 
@@ -1260,6 +1299,7 @@ local function SlashCommandHandler(msg)
             -- print("itemLevel", itemLevel)
             -- print("inventoryTypeName", inventoryTypeName)
 
+            ilvlchange = nil
             local _, mog = AddOn:checkAddItemTransmog(itemLink)
             local t = { itemLink, player, itemLevel, mog }
             AddOn:AddItemToLootTable(t)
@@ -1300,6 +1340,7 @@ local function SlashCommandHandler(msg)
                 return AddOn:checkOther(itemLink, player)
             end
 
+            ilvlchange = nil
             local _, mog = AddOn:checkAddItem(itemLink, rarity, equipLoc, itemClass, itemSubClass, itemLevel)
             local t = { itemLink, player, itemLevel, mog }
             AddOn:AddItemToLootTable(t)
