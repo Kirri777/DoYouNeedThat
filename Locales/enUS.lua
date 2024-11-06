@@ -16,6 +16,7 @@ L["Minimum itemlevel allowed"] = "Minimum itemlevel allowed (Your equipped iteml
 L["Minimum itemlevels lower"] = "Minimum Itemlevels lower (Equipped itemlevel - offset)"
 L["Default Whisper Message"] = "Hi, do you need [item]?"
 L["Toggle Window"] = "Toggle Window"
+L["SETTINGS_MENU_CUSTOM_MESSAGES"] = "Custom messages"
 L["MINIMAP_ICON_TOOLTIP1"] = "Click to toggle Window"
 L["MINIMAP_ICON_TOOLTIP2"] = "Right-click to open DoYouNeedThat options panel"
 L["OPTIONS_DONT_CHECK_ISITEMUPGRADE"] = "Show all items for you (if checked then you can see items below your item Level)"

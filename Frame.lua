@@ -113,7 +113,7 @@ function AddOn:repositionFrames()
         local ailvl, bilvl = tonumber(a.ilvl:GetText()), tonumber(b.ilvl:GetText())
         return ailvl > bilvl
     end)
-    
+
     for i = 1, #AddOn.Entries do
         local ilvl = tonumber(AddOn.Entries[i].ilvl:GetText())
 
@@ -138,7 +138,7 @@ function AddOn:repositionFrames()
             local aitemID, bitemID = tonumber(a.itemID), tonumber(b.itemID)
             return aitemID > bitemID
         end)
-        
+
         for i = 1, #entries do
             local currententry = entries[i]
 
@@ -351,7 +351,7 @@ function AddOn.createLootFrame()
             loot_table.equipped_text:SetPoint("TOPLEFT", loot_table, "TOPLEFT", 195, 16)
         end
     end
-    
+
     AddOn.lootFrame:SetSize(lootFrame_size, 200)
     loot_table.content:SetSize(content_size, 140)
 
@@ -474,7 +474,7 @@ function AddOn.createLootFrame()
             entry.itemID = nil
             entry.looter = nil
             entry.ilvlchange = nil
-            
+
             -- Re order
             AddOn:repositionFrames()
         end)
@@ -505,7 +505,7 @@ function AddOn.createLootFrame()
 
         if AddOn.db.config.checkCustomTexts and next(AddOn.db.config.customTexts) then
             entry.whisper:SetPoint("RIGHT", entry, "RIGHT", -60, 0)
-            
+
             ---@type table|BackdropTemplate|Button
             entry.customTextButton = CreateFrame("Button", "DYNT_Entry_CustomTextButton" .. i, entry, "BackdropTemplate")
             entry.customTextButton:SetPoint("RIGHT", entry, "RIGHT", -30, 0)
@@ -536,7 +536,7 @@ function AddOn.createLootFrame()
             end)
             entry.customTextButton:Hide()
         end
-        
+
         entry.whisper:SetScript("OnClick", function()
             AddOn:sendWhisperToLooter(entry.itemLink, entry.looter)
             entry.whisper:Hide()
@@ -615,7 +615,8 @@ function AddOn.createOptionsFrame()
 
     -- Hide warbound items
     ---@type table|BackdropTemplate|CheckButton
-    options.hideWarboundItems = CreateFrame("CheckButton", "DYNT_Options_HideWarboundItems", options, "ChatConfigCheckButtonTemplate")
+    options.hideWarboundItems = CreateFrame("CheckButton", "DYNT_Options_HideWarboundItems", options,
+        "ChatConfigCheckButtonTemplate")
     options.hideWarboundItems:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
     getglobal(options.hideWarboundItems:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_HIDE_WARBOUND_ITEMS"]);
     if AddOn.db.config.hideWarboundItems then options.hideWarboundItems:SetChecked(true) end
@@ -627,7 +628,8 @@ function AddOn.createOptionsFrame()
 
     -- Hide ilvl diffrent
     ---@type table|BackdropTemplate|CheckButton
-    options.showIlvlDiffrent = CreateFrame("CheckButton", "DYNT_Options_ShowIlvlDiffrent", options, "ChatConfigCheckButtonTemplate")
+    options.showIlvlDiffrent = CreateFrame("CheckButton", "DYNT_Options_ShowIlvlDiffrent", options,
+        "ChatConfigCheckButtonTemplate")
     options.showIlvlDiffrent:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
     getglobal(options.showIlvlDiffrent:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_SHOW_ILVL_DIFFRENT"]);
     if AddOn.db.config.showIlvlDiffrent then options.showIlvlDiffrent:SetChecked(true) end
@@ -694,7 +696,7 @@ function AddOn.createOptionsFrame()
         end
     end)
 
-	local chatshowlootframe_options = {
+    local chatshowlootframe_options = {
         ['disabled'] = L["SELECT_OPTION_DISABLED"],
         ['only_dungeon_raid'] = L["SELECT_OPTION_ONLY_DUNGEON_RAID"],
         ['everywhere'] = L["SELECT_OPTION_EVERYWHERE"],
@@ -702,25 +704,26 @@ function AddOn.createOptionsFrame()
 
     position = position - 40
 
-	options.chatShowLootFrame = CreateFrame("Frame", "DYNT_Options_ChatShowLootFrame", options, "UIDropDownMenuTemplate")
-	options.chatShowLootFrame:SetPoint("TOPLEFT", options, "TOPLEFT", 3, position)
-	-- options.chatShowLootFrame:SetWidth(150)
+    options.chatShowLootFrame = CreateFrame("Frame", "DYNT_Options_ChatShowLootFrame", options, "UIDropDownMenuTemplate")
+    options.chatShowLootFrame:SetPoint("TOPLEFT", options, "TOPLEFT", 3, position)
+    -- options.chatShowLootFrame:SetWidth(150)
     UIDropDownMenu_SetWidth(options.chatShowLootFrame, 150)
-    getglobal(options.chatShowLootFrame:GetName() .. 'Text'):SetText(chatshowlootframe_options[AddOn.db.config.chatShowLootFrame]);
-	options.chatShowLootFrame.initialize = function()
+    getglobal(options.chatShowLootFrame:GetName() .. 'Text'):SetText(chatshowlootframe_options
+    [AddOn.db.config.chatShowLootFrame]);
+    options.chatShowLootFrame.initialize = function()
         local info = {}
         for key, value in pairs(chatshowlootframe_options) do
-			info.text = value
-			info.value = key
-			info.checked = key == AddOn.db.config.chatShowLootFrame
-			info.func = function(self)
-				AddOn.db.config.chatShowLootFrame = self.value
+            info.text = value
+            info.value = key
+            info.checked = key == AddOn.db.config.chatShowLootFrame
+            info.func = function(self)
+                AddOn.db.config.chatShowLootFrame = self.value
                 getglobal(options.chatShowLootFrame:GetName() .. 'Text'):SetText(self:GetText());
                 AddOn:PLAYER_ENTERING_WORLD()
-			end
-			UIDropDownMenu_AddButton(info)
+            end
+            UIDropDownMenu_AddButton(info)
         end
-	end
+    end
 
     options.chatShowLootFrame.labelText = options.chatShowLootFrame:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
     options.chatShowLootFrame.labelText:SetPoint("TOPLEFT", options.chatShowLootFrame, "TOPLEFT", 20, 15)
@@ -789,23 +792,6 @@ function AddOn.createOptionsFrame()
     options.minDelta.labelText:SetShadowOffset(1, -1)
     options.minDelta.labelText:SetText(L["Minimum itemlevels lower"])
 
-
-    position = position - 40
-
-    -- Check custom texts
-    ---@type table|BackdropTemplate|CheckButton
-    options.checkCustomTexts = CreateFrame("CheckButton", "DYNT_Options_CheckCustomTexts", options,
-        "ChatConfigCheckButtonTemplate")
-    options.checkCustomTexts:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
-    getglobal(options.checkCustomTexts:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_CUSTOM_TEXTS"]);
-    if AddOn.Config.checkCustomTexts then options.checkCustomTexts:SetChecked(true) end
-    options.checkCustomTexts:SetScript("OnClick", function(self)
-        AddOn.db.config.checkCustomTexts = self:GetChecked()
-        AddOn:recreateLootFrame()
-    end)
-
-    AddOn.createCustomTextInputs(options)
-
     -- Set the field values to their value in SavedVariables.
     function options.refreshFields()
         options.debug:SetChecked(AddOn.Config.debug)
@@ -842,14 +828,49 @@ function AddOn.createOptionsFrame()
         options.refreshFields()
     end
 
+    local subcategorycustommessages = AddOn.createSubcategoryCustomMessages()
+
     if (Settings ~= nil) then
         -- wow10
         local category = Settings.RegisterCanvasLayoutCategory(options, 'DoYouNeedThat')
+        Settings.RegisterCanvasLayoutSubcategory(category, subcategorycustommessages, L["SETTINGS_MENU_CUSTOM_MESSAGES"])
         Settings.RegisterAddOnCategory(category)
         options.categoryID = category:GetID() -- for OpenToCategory use
     else
         InterfaceOptions_AddCategory(options)
+        InterfaceOptions_AddCategory(subcategorycustommessages)
     end
+end
+
+--[[
+    Creates a new subcategory for custom messages in the interface options
+
+    @return A table containing the subcategory frame
+--]]
+function AddOn.createSubcategoryCustomMessages()
+    local position = -20
+    local options = CreateFrame("Frame")
+    options.parent = "DoYouNeedThat"
+    options.name = "DoYouNeedThat_CustomMessages"
+
+    -- Check custom texts
+    ---@type table|BackdropTemplate|CheckButton
+    -- A checkbox to enable or disable the custom text feature
+    options.checkCustomTexts = CreateFrame("CheckButton", "DYNT_Options_CheckCustomTexts", options,
+        "ChatConfigCheckButtonTemplate")
+    options.checkCustomTexts:SetPoint("TOPLEFT", options, "TOPLEFT", 20, position)
+    getglobal(options.checkCustomTexts:GetName() .. 'Text'):SetText(L["OPTIONS_CHECK_CUSTOM_TEXTS"]);
+    if AddOn.Config.checkCustomTexts then options.checkCustomTexts:SetChecked(true) end
+    options.checkCustomTexts:SetScript("OnClick", function(self)
+        -- Toggle the custom text feature and recreate the loot frame
+        AddOn.db.config.checkCustomTexts = self:GetChecked()
+        AddOn:recreateLootFrame()
+    end)
+
+    -- Create the custom text input fields
+    AddOn.createCustomTextInputs(options)
+
+    return options
 end
 
 --[[
@@ -863,10 +884,11 @@ function AddOn.addCustomTextInput(index, frame)
         frame.customTextInput = {}
     end
 
-    local position = -(index * 30 + 490)
+    local position = -(index * 30 + 20)
 
     ---@type table|BackdropTemplate|EditBox
-    frame.customTextInput[index] = CreateFrame("EditBox", "DYNT_Options_CustomTextInput_" .. index, frame, "InputBoxTemplate")
+    frame.customTextInput[index] = CreateFrame("EditBox", "DYNT_Options_CustomTextInput_" .. index, frame,
+        "InputBoxTemplate")
     frame.customTextInput[index]:SetSize(400, 32)
     frame.customTextInput[index]:SetPoint("TOPLEFT", frame, "TOPLEFT", 50, position)
     frame.customTextInput[index]:SetAutoFocus(false)
@@ -886,7 +908,7 @@ function AddOn.addCustomTextInput(index, frame)
         AddOn.db.config.customTexts[index] = self:GetText()
         AddOn.saveCustomTextInputs(frame)
     end)
-    
+
     local whisperLabel = frame.customTextInput[index]:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
     whisperLabel:SetPoint("TOPLEFT", frame.customTextInput[index], "TOPLEFT", -25, -10)
     whisperLabel:SetJustifyH("LEFT")
@@ -936,7 +958,7 @@ function AddOn.saveCustomTextInputs(frame)
 
     -- Loop through all custom text inputs and save their text to the db
     -- if they are not empty
-    for _,text in pairs(old_custom_texts) do
+    for _, text in pairs(old_custom_texts) do
         if text and text ~= "" then
             AddOn.db.config.customTexts[index] = text
             index = index + 1
@@ -964,7 +986,7 @@ end
     @param frame The frame on which the custom text inputs are located
 --]]
 function AddOn.removeCustomTextInputs(frame)
-    for i = 1, count_custom_text do
+    for i, _ in pairs(frame.customTextInput) do
         if frame.customTextInput[i] then
             -- Hide the input field
             frame.customTextInput[i]:Hide()
@@ -983,4 +1005,3 @@ function AddOn.removeCustomTextInputs(frame)
         end
     end
 end
-

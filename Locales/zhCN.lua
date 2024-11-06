@@ -19,6 +19,7 @@ L["Minimum itemlevels lower"] = "显示低于你装等多少的装备"
 L["Toggle Window"] = "打开窗口"
 L["Whisper"] = "私聊"
 L["Whisper Message"] = "私聊发送的信息（用[item]来表示你需要的装备）"
+L["SETTINGS_MENU_CUSTOM_MESSAGES"] = "Custom messages"
 L["MINIMAP_ICON_TOOLTIP1"] = "Click to toggle Window"
 L["MINIMAP_ICON_TOOLTIP2"] = "Right-click to open DoYouNeedThat options panel"
 L["OPTIONS_DONT_CHECK_ISITEMUPGRADE"] =
