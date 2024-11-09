@@ -931,17 +931,7 @@ function AddOn:ClearEntries()
 
             if self.Entries[i].customTextMenu then
                 self.Entries[i].customTextMenu:Hide()
-                self.Entries[i].customTextMenu:SetParent(nil)
-                self.Entries[i].customTextMenu:ClearAllPoints()
-                self.Entries[i].customTextMenu:UnregisterAllEvents()
-                self.Entries[i].customTextMenu:SetID(0)
-                self.Entries[i].customTextMenu = nil
                 self.Entries[i].customTextButton:Hide()
-                self.Entries[i].customTextButton:SetParent(nil)
-                self.Entries[i].customTextButton:ClearAllPoints()
-                self.Entries[i].customTextButton:UnregisterAllEvents()
-                self.Entries[i].customTextButton:SetID(0)
-                self.Entries[i].customTextButton = nil
             end
         end
     end
