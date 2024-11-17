@@ -40,7 +40,7 @@ L["OPTIONS_CHECK_DEBUG"] = "Enable Debug Mode"
 L["OPTIONS_CHECK_DEBUG_TOOLTIP"] = "Enables debug messages for troubleshooting or development. Use only if experiencing issues or when advised."
 
 L["OPTIONS_CHECK_OPEN_AFTER_ENCOUNTER"] = "Open loot window post-encounter"
-L["OPTIONS_CHECK_OPEN_AFTER_ENCOUNTER_TOOLTIP"] = "Automatically opens the loot window after each encounter, making loot review more convenient."
+L["OPTIONS_CHECK_OPEN_AFTER_ENCOUNTER_TOOLTIP"] = "The loot window will appear automatically after a boss or mob kill, if its drop aligns with your set preferences."
 
 L["OPTIONS_CHECK_TRANSMOGABLE"] = "Check missing transmogs (\124cFF8080FFCanIMogIt\124r)"
 L["OPTIONS_CHECK_TRANSMOGABLE_TOOLTIP"] = "Displays items that are not yet in your transmog collection. Useful for spotting missing appearances. (\124cFF8080FFRequires CanIMogIt\124r)."
@@ -67,7 +67,7 @@ L["OPTIONS_CHECK_HIDE_MINIMAP"] = "Hide minimap button"
 L["OPTIONS_CHECK_HIDE_MINIMAP_TOOLTIP"] = "Removes the minimap button from view, helping to reduce clutter on your minimap."
 
 L["OPTIONS_CHECK_CHAT_SHOW_LOOT_FRAME"] = "Show loot frame on item drop"
-L["OPTIONS_CHECK_CHAT_SHOW_LOOT_FRAME_TOOLTIP"] = "Displays the loot frame when a classifiable item drops from any mob, not limited to bosses. Helps with quicker item assessments."
+L["OPTIONS_CHECK_CHAT_SHOW_LOOT_FRAME_TOOLTIP"] = "Displays the loot frame when a classifiable item drops from any mob / boss. Helps with quicker item assessments."
 
 L["OPTIONS_SLIDER_DELTA"] = "Minimum Item Level Offset"
 L["OPTIONS_SLIDER_DELTA_TOOLTIP"] = "Sets an item level threshold by adjusting the offset from equipped items. Useful for filtering out minor upgrades."

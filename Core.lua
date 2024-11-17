@@ -579,15 +579,8 @@ function AddOn:BOSS_KILL(encounterID, encounterName)
         return
     end
 
-    local _, _, difficulty = GetInstanceInfo()
     -- Clear all entries in the loot table
     self:ClearEntries()
-
-    -- Don't open if its disabled or its not the right difficultyID
-    if self.Config.openAfterEncounter and (difficulty ~= 8 or self:isLastBossMythicPlus(encounterID)) then
-        self.lootFrame:Show()
-        self.db.lootWindowOpen = true
-    end
 end
 
 --[[
@@ -611,33 +604,6 @@ function AddOn:CHALLENGE_MODE_COMPLETED()
 
     -- Clear all entries in the loot table
     self:ClearEntries()
-
-    -- Don't open if its disabled
-    if self.Config.openAfterEncounter then
-        self.lootFrame:Show()
-        self.db.lootWindowOpen = true
-    end
-end
-
---[[
-    Checks if the given encounter ID corresponds to a last boss in a Mythic+ dungeon.
-
-    @param encounterId number: The encounter ID to check.
-
-    @return boolean: True if the encounter ID is a last boss in a Mythic+ dungeon, false otherwise.
---]]
-function AddOn:isLastBossMythicPlus(encounterId)
-    -- Convert the encounter ID to a number
-    encounterId = AddOn:getNumberOrZero(encounterId)
-
-    -- Iterate through the list of Mythic+ last boss IDs
-    for _, id in ipairs(self.Utils.MythicPlusLastBosses) do
-        -- Check if the current ID matches the provided encounter ID
-        if AddOn:getNumberOrZero(id) == encounterId then
-            return true -- Return true if a match is found
-        end
-    end
-    return false -- Return false if no match is found
 end
 
 --[[
@@ -958,7 +924,7 @@ function AddOn:AddItemToLootTable(t)
     AddOn:ShowLootFrameFromChat()
 
     local entry = self:GetEntry(t[1], t[2])
-    local _, _, _, equipLoc, _, _, itemSubClass = GetItemInfoInstant(t[1])
+    local _, _, _, equipLoc = GetItemInfoInstant(t[1])
     local character = t[2]:match("(.*)%-") or t[2]
     local classColor = RAID_CLASS_COLORS[select(2, UnitClass(character))]
     entry.itemLink = t[1]
@@ -1028,7 +994,6 @@ function AddOn:ShowLootFrameFromChat()
         return
     end
 
-    -- local _, instanceType = GetInstanceInfo()
     self.Debug("ShowLootFrameFromChat - instanceType: " .. AddOn.instanceType)
 
     if AddOn.instanceType ~= "none" then

@@ -656,14 +656,6 @@ function AddOn.createSettingsPage()
         },
         {
             type = "checkbox",
-            name = L["OPTIONS_CHECK_OPEN_AFTER_ENCOUNTER"],
-            variableKey = "openAfterEncounter",
-            variableTbl = AddOn.db.config,
-            tooltip = L["OPTIONS_CHECK_OPEN_AFTER_ENCOUNTER_TOOLTIP"],
-            default = true
-        },
-        {
-            type = "checkbox",
             name = L["OPTIONS_CHECK_TRANSMOGABLE"],
             variableKey = "checkTransmogable",
             variableTbl = AddOn.db.config,
