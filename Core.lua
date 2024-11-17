@@ -775,8 +775,6 @@ function AddOn:ADDON_LOADED(addon)
 
     -- Set window position
     self.lootFrame:SetPoint(self.db.lootWindow[1], self.db.lootWindow[2], self.db.lootWindow[3])
-    -- Reopen window if left opened on uireload/exit
-    if self.db.lootWindowOpen then self.lootFrame:Show() end
 
     -- Replace config with saved one
     self.Config = self.db.config
