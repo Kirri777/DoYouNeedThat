@@ -810,7 +810,7 @@ end
 
 function AddOn:IsItemUpgrade(ilvl, equipLoc)
     local function overOrWithinMin(eqilvl, eq, delta)
-        return eq <= eqilvl or eqilvl >= eq - delta
+        return eqilvl >= eq + delta
     end
 
     if ilvl ~= nil and equipLoc ~= nil and equipLoc ~= '' then

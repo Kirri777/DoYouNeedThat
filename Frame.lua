@@ -756,8 +756,8 @@ function AddOn.createSettingsPage()
             variableTbl = AddOn.db.config,
             tooltip = L["OPTIONS_SLIDER_DELTA_TOOLTIP"],
             default = 0,
-            minValue = 0,
-            maxValue = 500,
+            minValue = -500,
+            maxValue = 100,
             step = 1
         }
     }
