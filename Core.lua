@@ -723,6 +723,7 @@ function AddOn:ADDON_LOADED(addon)
     end
 
     self.db = DyntDB
+    self.db.lootWindowOpen = false
 
     -- Set minDelta default if its not a fresh install
     if not self.db.config.minDelta then
